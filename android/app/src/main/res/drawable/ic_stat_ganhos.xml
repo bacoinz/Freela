@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone pequeno das notificações (branco, a moeda com o euro). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    <path
+        android:pathData="M104,256a152,152 0,1 0,304 0a152,152 0,1 0,-304 0"
+        android:strokeWidth="36"
+        android:strokeColor="#FFFFFFFF"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M304,194c-13,-14 -32,-22 -53,-22c-42,0 -71,35 -71,84s29,84 71,84c21,0 40,-8 53,-22"
+        android:strokeWidth="36"
+        android:strokeLineCap="round"
+        android:strokeColor="#FFFFFFFF"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M150,236h120M150,280h120"
+        android:strokeWidth="32"
+        android:strokeLineCap="round"
+        android:strokeColor="#FFFFFFFF" />
+</vector>

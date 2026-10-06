@@ -10,10 +10,15 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "android:icons": "node scripts/make-icons.mjs && capacitor-assets generate --android --iconBackgroundColor \"#2563eb\" --iconBackgroundColorDark \"#1d4ed8\" --splashBackgroundColor \"#f3f4f6\" --splashBackgroundColorDark \"#0b1120\"",
+    "android:sync": "npm run build && cap sync android",
+    "apk": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-apk.ps1",
+    "apk:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/install-apk.ps1"
   },
   "dependencies": {
     "@aparajita/capacitor-biometric-auth": "^10.0.0",
+    "@capacitor/android": "^8.5.2",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.2",
     "@capacitor/filesystem": "^8.1.4",
@@ -30,6 +35,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^26.6.4",
