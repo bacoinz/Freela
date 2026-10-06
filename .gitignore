@@ -1,0 +1,29 @@
+# dependências e builds
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Android (gerado / local)
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.apk
+*.aab
+release/
+
+# chave de assinatura — NUNCA no git (guardar cópia à parte!)
+keystore/
+*.jks
+*.keystore
+keystore.properties
+
+# sistema / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+*.log
