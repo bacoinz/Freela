@@ -2,9 +2,9 @@ import { CalendarDays } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { calendarEvents, monthGrid, monthSummary, type CalendarEvent } from '../../domain/calendar'
-import { formatDateLong, isoParts, periodOf, WEEKDAYS_SHORT_PT } from '../../domain/dates'
+import { addMonths, formatDateLong, isoParts, periodOf, WEEKDAYS_SHORT_PT } from '../../domain/dates'
 import type { Occurrence } from '../../domain/obligations'
-import type { CalendarColorMode } from '../../domain/types'
+import type { CalendarColorMode, ISODate, Period } from '../../domain/types'
 import { commit, useData } from '../../data/app'
 import { cn } from '../components/cn'
 import { Segmented } from '../components/Form'
@@ -17,6 +17,7 @@ import { ObligationSheet } from '../sheets/ObligationSheet'
 import { ReceiveSheet, type ReceiveTarget } from '../sheets/ReceiveSheet'
 import { ReceiveButton } from './HomeScreen'
 import { ObligationRow } from './ObligationsScreen'
+import { useHorizontalSwipe } from '../useSwipe'
 
 const isDone = (e: CalendarEvent) => e.kind === 'obligation' && (e.state === 'done' || e.state === 'notApplicable')
 
@@ -39,6 +40,8 @@ export function CalendarScreen() {
   const data = useData()
   const today = useToday()
   const [period, setPeriod] = useState(periodOf(today))
+  // De que lado entra o mês novo (para a animação).
+  const [enterFrom, setEnterFrom] = useState<'left' | 'right' | null>(null)
   const [selected, setSelected] = useState<string | null>(today)
   const [receiving, setReceiving] = useState<ReceiveTarget | null>(null)
   const [occ, setOcc] = useState<Occurrence | null>(null)
@@ -51,9 +54,15 @@ export function CalendarScreen() {
   const dayEvents = day ? (events[day] ?? []) : []
 
   const changePeriod = (p: string) => {
+    if (p === period) return
+    setEnterFrom(p > period ? 'right' : 'left')
     setPeriod(p)
     setSelected(p === periodOf(today) ? today : null)
   }
+  const swipe = useHorizontalSwipe({
+    onNext: () => changePeriod(addMonths(period, 1)),
+    onPrev: () => changePeriod(addMonths(period, -1)),
+  })
 
   return (
     <>
@@ -70,57 +79,14 @@ export function CalendarScreen() {
           ]}
         />
 
-        <Card className="p-2">
-          <div className="grid grid-cols-7 pb-1 text-center text-xs font-semibold text-faint" aria-hidden>
-            {WEEKDAYS_SHORT_PT.map((w) => (
-              <span key={w}>{w}</span>
-            ))}
-          </div>
-          <div role="grid" aria-label="Dias do mês" className="flex flex-col gap-1">
-            {weeks.map((week) => (
-              <div role="row" key={week[0]} className="grid grid-cols-7 gap-1">
-                {week.map((d) => {
-                  const inMonth = periodOf(d) === period
-                  const list = inMonth ? (events[d] ?? []) : []
-                  const isToday = d === today
-                  const isSel = d === day
-                  const dayNum = isoParts(d)[2]
-                  return (
-                    <button
-                      role="gridcell"
-                      key={d}
-                      type="button"
-                      disabled={!inMonth}
-                      onClick={() => setSelected(d)}
-                      aria-selected={isSel}
-                      aria-label={`${formatDateLong(d)}${list.length ? `, ${list.length} ${list.length === 1 ? 'evento' : 'eventos'}` : ''}`}
-                      className={cn(
-                        'flex min-h-12 flex-col items-center gap-1 rounded-xl pb-1.5 pt-1 transition-colors',
-                        inMonth ? 'hover:bg-surface-2' : 'opacity-35',
-                        isSel && 'bg-primary-soft hover:bg-primary-soft',
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          'tnum flex size-7 items-center justify-center rounded-full text-sm',
-                          isToday ? 'bg-primary font-bold text-white' : 'font-medium',
-                        )}
-                      >
-                        {dayNum}
-                      </span>
-                      <span className="flex h-2 items-center gap-0.5">
-                        {list.slice(0, 3).map((e, i) => (
-                          <Dot key={i} e={e} mode={mode} />
-                        ))}
-                        {list.length > 3 && <span className="text-[9px] font-bold leading-none text-muted">+</span>}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            ))}
+        <Card className="overflow-hidden p-2">
+          <div ref={swipe.ref} {...swipe.handlers} className="touch-pan-y select-none">
+            <div key={period} className={enterFrom === 'right' ? 'anim-from-right' : enterFrom === 'left' ? 'anim-from-left' : undefined}>
+              <CalendarGrid weeks={weeks} period={period} today={today} day={day} events={events} mode={mode} onSelect={setSelected} />
+            </div>
           </div>
         </Card>
+        <p className="-mt-3 px-1 text-xs text-faint">Arrasta o calendário para os lados para mudar de mês.</p>
 
         <Legend mode={mode} />
 
@@ -174,6 +140,71 @@ export function CalendarScreen() {
       </Page>
       <ReceiveSheet target={receiving} onClose={() => setReceiving(null)} />
       <ObligationSheet occ={occ} onClose={() => setOcc(null)} />
+    </>
+  )
+}
+
+interface CalendarGridProps {
+  weeks: ISODate[][]
+  period: Period
+  today: ISODate
+  day: ISODate | null
+  events: Record<ISODate, CalendarEvent[]>
+  mode: CalendarColorMode
+  onSelect: (d: ISODate) => void
+}
+
+/** Grelha do mês (segunda a domingo) com os pontos de cada dia. */
+function CalendarGrid({ weeks, period, today, day, events, mode, onSelect }: CalendarGridProps) {
+  return (
+    <>
+      <div className="grid grid-cols-7 pb-1 text-center text-xs font-semibold text-faint" aria-hidden>
+        {WEEKDAYS_SHORT_PT.map((w) => (
+          <span key={w}>{w}</span>
+        ))}
+      </div>
+      <div role="grid" aria-label="Dias do mês" className="flex flex-col gap-1">
+        {weeks.map((week) => (
+          <div role="row" key={week[0]} className="grid grid-cols-7 gap-1">
+            {week.map((d) => {
+              const inMonth = periodOf(d) === period
+              const list = inMonth ? (events[d] ?? []) : []
+              const isSel = d === day
+              return (
+                <button
+                  role="gridcell"
+                  key={d}
+                  type="button"
+                  disabled={!inMonth}
+                  onClick={() => onSelect(d)}
+                  aria-selected={isSel}
+                  aria-label={`${formatDateLong(d)}${list.length ? `, ${list.length} ${list.length === 1 ? 'evento' : 'eventos'}` : ''}`}
+                  className={cn(
+                    'flex min-h-12 flex-col items-center gap-1 rounded-xl pb-1.5 pt-1 transition-colors',
+                    inMonth ? 'hover:bg-surface-2' : 'opacity-35',
+                    isSel && 'bg-primary-soft hover:bg-primary-soft',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'tnum flex size-7 items-center justify-center rounded-full text-sm',
+                      d === today ? 'bg-primary font-bold text-white' : 'font-medium',
+                    )}
+                  >
+                    {isoParts(d)[2]}
+                  </span>
+                  <span className="flex h-2 items-center gap-0.5">
+                    {list.slice(0, 3).map((e, i) => (
+                      <Dot key={i} e={e} mode={mode} />
+                    ))}
+                    {list.length > 3 && <span className="text-[9px] font-bold leading-none text-muted">+</span>}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ))}
+      </div>
     </>
   )
 }

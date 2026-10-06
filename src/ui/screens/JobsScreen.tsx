@@ -8,6 +8,7 @@ import { normalizeName, payerColor, payerKey, payerLabel } from '../../domain/pa
 import type { AppData, Job } from '../../domain/types'
 import { useData } from '../../data/app'
 import { Button, Fab } from '../components/Button'
+import { cn } from '../components/cn'
 import { AppBar, Card, EmptyState, ListCard, Page, Section } from '../components/Layout'
 import { Field, Segmented, Select, inputClass } from '../components/Form'
 import { PayerAvatar } from '../components/Payer'
@@ -128,7 +129,7 @@ export function JobsScreen() {
               onChange={(e) => set({ q: e.target.value || undefined })}
               placeholder="Pesquisar trabalho, pagador, notas…"
               aria-label="Pesquisar"
-              className={`${inputClass} pl-11`}
+              className={cn(inputClass, 'pl-11')}
             />
           </div>
           <Button variant="secondary" icon={SlidersHorizontal} onClick={() => setFiltersOpen(true)} aria-label="Filtros">

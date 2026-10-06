@@ -6,6 +6,7 @@ import { addPayer, applyRecurring, removeRecurring, upsertRecurring, type PayerI
 import type { Cents, RecurringIncome } from '../../../domain/types'
 import { commit, useData } from '../../../data/app'
 import { BottomBar, Button } from '../../components/Button'
+import { cn } from '../../components/cn'
 import { confirm, toast, toastError } from '../../components/Feedback'
 import { Chip, ChipRow, Field, MoneyInput, Select, TextInput, Toggle, inputClass } from '../../components/Form'
 import { AppBar, Card, Page } from '../../components/Layout'
@@ -159,7 +160,7 @@ export function RecurringFormScreen() {
           </ChipRow>
         </Card>
         <Field label="Começa em" htmlFor={ids.start} hint="Mês a partir do qual a app cria os pagamentos «a receber».">
-          <input id={ids.start} type="month" value={startPeriod} onChange={(e) => e.target.value && setStartPeriod(e.target.value)} className={`${inputClass} tnum`} />
+          <input id={ids.start} type="month" value={startPeriod} onChange={(e) => e.target.value && setStartPeriod(e.target.value)} className={cn(inputClass, 'tnum')} />
         </Field>
         <Card>
           <Toggle checked={active} onChange={setActive} label="Ativo" description="Pausa nas férias ou quando deixar de haver pagamento." />

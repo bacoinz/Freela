@@ -222,6 +222,37 @@ input[type='date']::-webkit-calendar-picker-indicator {
   animation: toast-in 200ms ease-out;
 }
 
+/* Mês novo no calendário: entra do lado para onde se arrastou. */
+@keyframes from-right {
+  from {
+    opacity: 0.35;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes from-left {
+  from {
+    opacity: 0.35;
+    transform: translateX(-36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-from-right {
+  animation: from-right 220ms ease-out;
+}
+
+.anim-from-left {
+  animation: from-left 220ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,

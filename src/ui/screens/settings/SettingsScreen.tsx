@@ -4,6 +4,7 @@ import { updateSettings } from '../../../domain/ops'
 import { commit, useData } from '../../../data/app'
 import { canLock, unlock } from '../../../data/lock'
 import { isNative } from '../../../data/platform'
+import { cn } from '../../components/cn'
 import { toast, toastError } from '../../components/Feedback'
 import { Toggle, inputClass } from '../../components/Form'
 import { AppBar, Card, ListCard, ListRow, Page, Section } from '../../components/Layout'
@@ -37,7 +38,7 @@ function NumberSetting({ label, description, value, suffix, onSave }: { label: s
           onChange={(e) => setText(e.target.value)}
           onBlur={commitValue}
           onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          className={`${inputClass} tnum h-11 w-16 px-2 text-center`}
+          className={cn(inputClass, 'tnum h-11 w-16 px-2 text-center')}
         />
         <span className="w-8 text-sm text-muted">{suffix}</span>
       </div>
