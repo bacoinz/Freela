@@ -1,4 +1,4 @@
-# Ganhos — como testar, gerar a APK e instalar no telemóvel
+# Freela — como testar, gerar a APK e instalar no telemóvel
 
 A app é 100% local: não há servidor nem contas, e os dados ficam só no telemóvel (ou no browser, quando testas no PC).
 
@@ -43,7 +43,7 @@ No telemóvel, abre `http://<IP-do-PC>:5173`. O IP aparece no terminal. Continua
 npm run apk
 ```
 
-O ficheiro aparece em `release\Ganhos-v1.0.0.apk`. A primeira vez demora alguns minutos, porque o Gradle descarrega o que precisa; as seguintes são rápidas.
+O ficheiro aparece em `release\Freela-v1.0.0.apk`. A primeira vez demora alguns minutos, porque o Gradle descarrega o que precisa; as seguintes são rápidas.
 
 ---
 
@@ -62,7 +62,7 @@ O ficheiro aparece em `release\Ganhos-v1.0.0.apk`. A primeira vez demora alguns 
 
 ### Opção B — copiar o ficheiro
 
-1. Copia `release\Ganhos-v1.0.0.apk` para o telemóvel: por cabo, em modo «Transferência de ficheiros».
+1. Copia `release\Freela-v1.0.0.apk` para o telemóvel: por cabo, em modo «Transferência de ficheiros».
 2. No telemóvel, abre o ficheiro com o gestor de ficheiros.
 3. Se o Android pedir, permite «Instalar apps desconhecidas» para o gestor de ficheiros.
 4. O Play Protect pode avisar que a app é desconhecida. É normal numa app feita por ti: escolhe «Instalar mesmo assim».
@@ -87,7 +87,7 @@ O ficheiro aparece em `release\Ganhos-v1.0.0.apk`. A primeira vez demora alguns 
 ## 6. A chave de assinatura — GUARDA UMA CÓPIA
 
 A pasta **`keystore\`** tem dois ficheiros:
-- `ganhos-release.jks`
+- `freela-release.jks`
 - `keystore.properties`
 
 O Android só aceita atualizações assinadas com esta chave. Se a perderes, para instalar uma versão nova vais ter de desinstalar a app, e isso apaga os dados.
@@ -98,12 +98,12 @@ O Android só aceita atualizações assinadas com esta chave. Se a perderes, par
 
 ## 7. Cópias de segurança dos dados
 
-- **Automáticas:** todos os dias, se houve alterações, a app grava `Documentos/Ganhos/ganhos-backup-AAAA-MM-DD.json` e guarda as últimas 14.
+- **Automáticas:** todos os dias, se houve alterações, a app grava `Documentos/Freela/freela-backup-AAAA-MM-DD.json` e guarda as últimas 14.
 - **Manuais:** em Definições → Dados → **Exportar cópia de segurança**. Também há «Exportar para Excel (CSV)».
 - **Para o PC:**
   1. Liga o telemóvel por USB.
   2. Escolhe «Transferência de ficheiros».
-  3. Copia a pasta `Documentos/Ganhos`.
+  3. Copia a pasta `Documentos/Freela`.
 
   Faz isto de vez em quando. As cópias que ficam no telemóvel não te protegem se o perderes.
 - **Restaurar:** em Definições → Dados → **Importar cópia de segurança**. Também funciona no ecrã de recuperação, se os dados alguma vez não abrirem.
@@ -115,5 +115,5 @@ O Android só aceita atualizações assinadas com esta chave. Se a perderes, par
 | Problema | O que fazer |
 |---|---|
 | «App não instalada» ao atualizar | A APK nova foi assinada com outra chave, ou tem uma versão mais baixa. Usa a mesma pasta `keystore\` e aumenta a versão. |
-| Não chegam notificações | Definições do Android → Apps → Ganhos → Notificações: liga-as. Em Definições → Lembretes da app, usa «Enviar notificação de teste». A poupança de bateria pode atrasar um pouco os lembretes. |
-| `npm run apk` diz que não encontra o JDK ou o SDK | Abre o Android Studio uma vez e conclui o assistente. Se o instalaste noutra pasta, define a variável `GANHOS_JAVA_HOME` com o caminho da pasta `jbr`. |
+| Não chegam notificações | Definições do Android → Apps → Freela → Notificações: liga-as. Em Definições → Lembretes da app, usa «Enviar notificação de teste». A poupança de bateria pode atrasar um pouco os lembretes. |
+| `npm run apk` diz que não encontra o JDK ou o SDK | Abre o Android Studio uma vez e conclui o assistente. Se o instalaste noutra pasta, define a variável `FREELA_JAVA_HOME` com o caminho da pasta `jbr`. |

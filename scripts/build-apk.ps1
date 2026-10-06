@@ -1,4 +1,4 @@
-# Gera a APK assinada da app Ganhos em release\Ganhos-vX.Y.Z.apk
+# Gera a APK assinada da app Freela em release\Freela-vX.Y.Z.apk
 # Uso:  npm run apk
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
@@ -6,7 +6,7 @@ Set-Location $root
 
 # --- JDK 21 (vem com o Android Studio). Só para este build: o JAVA_HOME global não muda. ---
 $jdkCandidates = @(
-  $env:GANHOS_JAVA_HOME,
+  $env:FREELA_JAVA_HOME,
   'C:\Program Files\Android\Android Studio\jbr',
   "$env:LOCALAPPDATA\Programs\Android Studio\jbr",
   "$env:LOCALAPPDATA\JetBrains\Toolbox\apps\AndroidStudio\ch-0\current\jbr"
@@ -29,7 +29,7 @@ if (-not (Test-Path 'keystore\keystore.properties')) {
 }
 
 $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-Write-Host "==> Ganhos v$version" -ForegroundColor Cyan
+Write-Host "==> Freela v$version" -ForegroundColor Cyan
 Write-Host "    JDK: $env:JAVA_HOME"
 Write-Host "    SDK: $env:ANDROID_HOME"
 
@@ -51,7 +51,7 @@ try {
 }
 
 New-Item -ItemType Directory -Force release | Out-Null
-$out = "release\Ganhos-v$version.apk"
+$out = "release\Freela-v$version.apk"
 Copy-Item 'android\app\build\outputs\apk\release\app-release.apk' $out -Force
 Write-Host ''
 Write-Host "APK pronta: $out" -ForegroundColor Green

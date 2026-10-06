@@ -27,7 +27,7 @@ export function RemindersScreen() {
     if (on && isNative) {
       const p = perm === 'granted' ? 'granted' : await requestNotificationPermission()
       setPerm(p)
-      if (p !== 'granted') toast('Para receberes lembretes, autoriza as notificações da app Ganhos nas definições do Android.', 'error')
+      if (p !== 'granted') toast('Para receberes lembretes, autoriza as notificações da app Freela nas definições do Android.', 'error')
     }
     commit((d) => ({ ...d, settings: { ...d.settings, remindersEnabled: on } }), { touch: false })
   }
@@ -58,7 +58,7 @@ export function RemindersScreen() {
           <div className="flex flex-col gap-2">
             {perm === 'denied' && (
               <p className="rounded-xl bg-danger-soft px-3 py-2.5 text-sm text-danger">
-                As notificações estão bloqueadas. Ativa-as em Definições do Android → Apps → Ganhos → Notificações.
+                As notificações estão bloqueadas. Ativa-as em Definições do Android → Apps → Freela → Notificações.
               </p>
             )}
             <Button variant="secondary" icon={BellRing} onClick={() => void sendTestNotification().then(() => toast('A notificação de teste chega daqui a 5 segundos.', 'info'))}>

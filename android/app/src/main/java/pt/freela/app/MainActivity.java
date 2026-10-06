@@ -1,4 +1,4 @@
-package pt.freelance.ganhos;
+package pt.freela.app;
 
 import com.getcapacitor.BridgeActivity;
 

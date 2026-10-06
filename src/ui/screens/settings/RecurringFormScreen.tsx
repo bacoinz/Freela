@@ -22,7 +22,7 @@ export function RecurringFormScreen() {
   const navigate = useNavigate()
   const isNew = id === 'novo'
   const rec = isNew ? undefined : data.recurring.find((r) => r.id === id)
-  const ids = { title: useId(), payer: useId(), amount: useId(), day: useId(), method: useId(), start: useId(), pct: useId() }
+  const ids = { title: useId(), payer: useId(), amount: useId(), day: useId(), method: useId(), start: useId() }
 
   const [title, setTitle] = useState(rec?.title ?? '')
   const [payer, setPayer] = useState<PayerInput | null>(rec ? { kind: 'saved', id: rec.payerId } : null)
@@ -32,7 +32,6 @@ export function RecurringFormScreen() {
   const [methodId, setMethodId] = useState(rec?.methodId ?? '')
   const [months, setMonths] = useState<number[]>(rec?.months ?? ALL)
   const [startPeriod, setStartPeriod] = useState(rec?.startPeriod ?? periodOf(today))
-  const [pct, setPct] = useState(rec?.investPct !== undefined ? String(rec.investPct).replace('.', ',') : '')
   const [active, setActive] = useState(rec?.active ?? true)
 
   if (!isNew && !rec) return <Navigate to="/definicoes/fixos" replace />
@@ -41,13 +40,8 @@ export function RecurringFormScreen() {
 
   const save = () => {
     const dayN = Number(day)
-    const pctN = pct.trim() === '' ? undefined : Number(pct.replace(',', '.'))
     if (!payer) {
       toast('Indica quem paga.', 'error')
-      return
-    }
-    if (pctN !== undefined && (!Number.isFinite(pctN) || pctN < 0 || pctN > 100)) {
-      toast('A percentagem tem de estar entre 0 e 100.', 'error')
       return
     }
     try {
@@ -73,7 +67,6 @@ export function RecurringFormScreen() {
           active,
         }
         if (methodId) fields.methodId = methodId
-        if (pctN !== undefined) fields.investPct = pctN
         // Cria já o trabalho deste mês (se se aplicar).
         return applyRecurring(upsertRecurring(next, fields, ctx).data, ctx)
       })
@@ -165,14 +158,9 @@ export function RecurringFormScreen() {
             ))}
           </ChipRow>
         </Card>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Começa em" htmlFor={ids.start}>
-            <input id={ids.start} type="month" value={startPeriod} onChange={(e) => e.target.value && setStartPeriod(e.target.value)} className={`${inputClass} tnum`} />
-          </Field>
-          <Field label="% para investir" htmlFor={ids.pct} optional>
-            <input id={ids.pct} inputMode="decimal" value={pct} placeholder={String(data.settings.investPct)} onChange={(e) => setPct(e.target.value)} className={`${inputClass} tnum`} />
-          </Field>
-        </div>
+        <Field label="Começa em" htmlFor={ids.start} hint="Mês a partir do qual a app cria os pagamentos «a receber».">
+          <input id={ids.start} type="month" value={startPeriod} onChange={(e) => e.target.value && setStartPeriod(e.target.value)} className={`${inputClass} tnum`} />
+        </Field>
         <Card>
           <Toggle checked={active} onChange={setActive} label="Ativo" description="Pausa nas férias ou quando deixar de haver pagamento." />
         </Card>

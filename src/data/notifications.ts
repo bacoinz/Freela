@@ -75,7 +75,7 @@ export async function sendTestNotification(): Promise<void> {
     notifications: [
       {
         id: TEST_ID,
-        title: 'Ganhos — teste',
+        title: 'Freela — teste',
         body: 'Os lembretes estão a funcionar. 👍',
         channelId: CHANNEL,
         schedule: { at: new Date(Date.now() + 5000), allowWhileIdle: true },

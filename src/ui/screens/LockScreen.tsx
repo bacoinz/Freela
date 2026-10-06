@@ -27,7 +27,7 @@ export function LockScreen() {
     <div role="dialog" aria-modal="true" aria-label="App bloqueada" className="fixed inset-0 z-[80] flex flex-col items-center justify-center gap-6 bg-bg px-8 text-center">
       <img src="/icon.svg" alt="" className="size-20 rounded-3xl shadow-float" />
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-bold">Ganhos está bloqueada</h1>
+        <h1 className="text-xl font-bold">Freela está bloqueada</h1>
         <p className="text-muted">Usa a impressão digital ou o PIN do telemóvel.</p>
       </div>
       <Button size="lg" icon={Fingerprint} loading={busy} onClick={() => void tryUnlock()}>

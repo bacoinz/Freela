@@ -7,14 +7,16 @@ export interface DataStorage {
   save(json: string): Promise<void>
 }
 
-const WEB_KEY = 'ganhos:data'
+const WEB_KEY = 'freela:data'
+/** Chave antiga (quando a app se chamava "Ganhos") — lida se ainda não houver dados na nova. */
+const OLD_WEB_KEY = 'ganhos:data'
 
 /** No browser (testes no PC): localStorage. */
 export const webStorage: DataStorage = {
   describe: 'browser (localStorage)',
   async load() {
     try {
-      return localStorage.getItem(WEB_KEY)
+      return localStorage.getItem(WEB_KEY) ?? localStorage.getItem(OLD_WEB_KEY)
     } catch {
       return null
     }
@@ -24,8 +26,8 @@ export const webStorage: DataStorage = {
   },
 }
 
-const FILE = 'ganhos.json'
-const TMP = 'ganhos.json.tmp'
+const FILE = 'freela.json'
+const TMP = 'freela.json.tmp'
 
 async function readText(path: string): Promise<string> {
   const r = await Filesystem.readFile({ path, directory: Directory.Data, encoding: Encoding.UTF8 })

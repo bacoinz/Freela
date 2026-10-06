@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ícone pequeno das notificações (o "F" do Freela, branco). Gerado por scripts/make-icons.mjs -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+  <group android:translateX="-24" android:translateY="6">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M120 430 C122 342 130 268 152 212 C186 118 300 80 440 70 C406 136 340 178 270 194 C232 203 208 222 202 258 C196 312 192 364 190 408 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M186 344 C186 300 194 274 214 258 C256 228 316 210 390 202 C358 252 308 290 246 306 C218 314 198 324 186 344 Z" />
+  </group>
+</vector>

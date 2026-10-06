@@ -24,7 +24,7 @@ export async function importFromFile(file: File): Promise<boolean> {
     const ok = await choose(
       'Substituir os dados atuais?',
       [{ value: true, label: 'Substituir pelos da cópia', tone: 'danger' }],
-      `A cópia tem ${backupSummary(imported)} Os dados atuais são substituídos${isNative ? ' (antes disso, a app guarda uma cópia deles em Documentos/Ganhos)' : ''}.`,
+      `A cópia tem ${backupSummary(imported)} Os dados atuais são substituídos${isNative ? ' (antes disso, a app guarda uma cópia deles em Documentos/Freela)' : ''}.`,
     )
     if (!ok) return false
     const current = appStore.getState().data
@@ -96,7 +96,7 @@ export function DataScreen() {
             <p className="font-semibold">Os teus dados ficam só neste {isNative ? 'telemóvel' : 'browser'}.</p>
             <p className="text-muted">
               {isNative
-                ? `Todos os dias a app guarda uma cópia automática em Documentos/Ganhos (as últimas 14).${lastAuto ? ` Última: ${formatDateShort(lastAuto)}.` : ''}`
+                ? `Todos os dias a app guarda uma cópia automática em Documentos/Freela (as últimas 14).${lastAuto ? ` Última: ${formatDateShort(lastAuto)}.` : ''}`
                 : 'No browser não há cópia automática — exporta à mão de vez em quando.'}
             </p>
             <p className="text-muted">Última exportação: {lastExport ? formatDateShort(lastExport) : 'nunca'}.</p>
@@ -114,7 +114,7 @@ export function DataScreen() {
           </div>
           <p className="px-1 text-sm leading-relaxed text-muted">
             {isNative
-              ? 'Os ficheiros ficam em Documentos/Ganhos e abre-se o menu Partilhar (podes enviá-los para onde quiseres, ou cancelar).'
+              ? 'Os ficheiros ficam em Documentos/Freela e abre-se o menu Partilhar (podes enviá-los para onde quiseres, ou cancelar).'
               : 'Os ficheiros vão para a pasta de transferências do browser.'}
           </p>
         </Section>
@@ -143,7 +143,7 @@ export function DataScreen() {
               <FolderOpen aria-hidden className="mt-0.5 size-5 shrink-0" />
               <p>
                 Liga o telemóvel ao PC por cabo USB, escolhe «Transferência de ficheiros» no aviso do telemóvel e copia a pasta{' '}
-                <b className="text-ink">Documentos/Ganhos</b> para o PC.
+                <b className="text-ink">Documentos/Freela</b> para o PC.
               </p>
             </Card>
           </Section>

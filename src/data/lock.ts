@@ -24,10 +24,10 @@ export async function unlock(): Promise<boolean> {
   if (!isNative) return true
   try {
     await BiometricAuth.authenticate({
-      reason: 'Desbloquear a app Ganhos',
+      reason: 'Desbloquear a Freela',
       cancelTitle: 'Cancelar',
       allowDeviceCredential: true,
-      androidTitle: 'Ganhos',
+      androidTitle: 'Freela',
       androidSubtitle: 'Confirma que és tu',
       androidConfirmationRequired: false,
     })

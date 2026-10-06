@@ -19,14 +19,17 @@ interface AppBarProps {
   /** Mostra o botão "voltar" (com o destino quando não há histórico). */
   back?: string
   actions?: ReactNode
+  /** Imagem/ícone antes do título (ex.: o logótipo no Início). */
+  logo?: ReactNode
 }
 
-export function AppBar({ title, back, actions }: AppBarProps) {
+export function AppBar({ title, back, actions, logo }: AppBarProps) {
   const goBack = useGoBack(back)
   return (
     <header className="sticky top-0 z-30 bg-bg" style={{ paddingTop: 'var(--sat)' }}>
       <div className="mx-auto flex h-14 max-w-xl items-center gap-1 px-2">
         {back !== undefined && <IconButton icon={ArrowLeft} label="Voltar" onClick={goBack} />}
+        {logo && <span className="ml-2 flex shrink-0 items-center">{logo}</span>}
         <h1 className={cn('min-w-0 flex-1 truncate font-bold tracking-tight', back !== undefined ? 'text-lg' : 'px-2 text-[22px]')}>
           {title}
         </h1>

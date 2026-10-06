@@ -29,8 +29,14 @@ describe('parseAppData', () => {
   it('aceita o formato de cópia de segurança exportado', () => {
     const d = sample()
     const backup = JSON.parse(JSON.stringify(makeBackup(d, '2026-10-06T12:00:00.000Z')))
-    expect(backup.app).toBe('ganhos')
+    expect(backup.app).toBe('freela')
     expect(parseAppData(backup)).toEqual(d)
+  })
+
+  it('aceita cópias antigas (de quando a app se chamava "Ganhos")', () => {
+    const d = sample()
+    const old = JSON.parse(JSON.stringify({ app: 'ganhos', schemaVersion: 1, exportedAt: '2026-10-06T12:00:00.000Z', data: d }))
+    expect(parseAppData(old)).toEqual(d)
   })
 
   it('completa definições em falta com os valores por defeito', () => {
@@ -43,7 +49,7 @@ describe('parseAppData', () => {
   })
 
   it('rejeita ficheiros que não são da app', () => {
-    expect(() => parseAppData({ foo: 1 })).toThrow(/não parece ser uma cópia de segurança/)
+    expect(() => parseAppData({ foo: 1 })).toThrow(/não parece ser uma cópia de segurança da app Freela/)
     expect(() => parseAppData(null)).toThrow(/não parece ser uma cópia de segurança/)
   })
 

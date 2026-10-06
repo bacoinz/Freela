@@ -4,7 +4,8 @@ import { installmentInvest, isInstallmentOverdue, jobInvestExpected, overdueDate
 import { NEUTRAL_COLOR, payerColor, payerKey, payerLabel } from './payers'
 import type { AppData, Cents, ISODate, Period } from './types'
 
-export type StatsPreset = 'thisYear' | 'lastYear' | 'last12' | 'all'
+/** Período das estatísticas: um ano, os últimos 12 meses ou tudo. */
+export type StatsPreset = { kind: 'year'; year: number } | { kind: 'last12' } | { kind: 'all' }
 
 export interface DateRange {
   from: ISODate
@@ -111,11 +112,10 @@ export function receivedEntries(data: AppData): ReceivedEntry[] {
 
 export function presetRange(preset: StatsPreset, data: AppData, today: ISODate): DateRange {
   const [y] = isoParts(today)
-  switch (preset) {
-    case 'thisYear':
-      return { from: `${y}-01-01`, to: today }
-    case 'lastYear':
-      return { from: `${y - 1}-01-01`, to: `${y - 1}-12-31` }
+  switch (preset.kind) {
+    case 'year':
+      // O ano atual vai até hoje; os outros anos são completos.
+      return { from: `${preset.year}-01-01`, to: preset.year === y ? today : `${preset.year}-12-31` }
     case 'last12':
       return { from: startOfPeriod(addMonths(periodOf(today), -11)), to: today }
     case 'all': {
@@ -123,6 +123,16 @@ export function presetRange(preset: StatsPreset, data: AppData, today: ISODate):
       return { from: first && first < today ? first : today, to: today }
     }
   }
+}
+
+/** Anos a mostrar: do primeiro ano com recebimentos até ao ano seguinte ao atual (no máximo 3). */
+export function statsYears(data: AppData, today: ISODate): number[] {
+  const [y] = isoParts(today)
+  const first = receivedEntries(data)[0]?.date
+  const from = Math.max(Math.min(first ? isoParts(first)[0] : y, y), y - 1)
+  const years: number[] = []
+  for (let year = from; year <= y + 1; year++) years.push(year)
+  return years
 }
 
 const inRange = (d: ISODate, r: DateRange) => d >= r.from && d <= r.to

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { formatDateLong, formatDateShort, formatPeriodPT } from '../../domain/dates'
 import { isReceived, jobTotal, paidAmount, paidCount, remainingAmount } from '../../domain/installments'
-import { installmentInvest, isInstallmentOverdue, jobInvested, jobInvestExpected, jobStatus } from '../../domain/jobs'
+import { installmentInvest, isInstallmentOverdue, jobInvested, jobInvestExpected, jobStatus, overdueDateOf } from '../../domain/jobs'
 import { formatMoney } from '../../domain/money'
 import { deleteJob, duplicateJob, undoReceive } from '../../domain/ops'
 import { payerColor, payerLabel } from '../../domain/payers'
@@ -146,7 +146,7 @@ export function JobDetailScreen() {
           </div>
         </Card>
 
-        <Section title={n > 1 ? 'Prestações' : 'Pagamento'}>
+        <Section title={n > 1 ? 'Pagamentos' : 'Pagamento'}>
           <ListCard>
             {job.installments.map((inst, i) => {
               const received = isReceived(inst)
@@ -169,8 +169,12 @@ export function JobDetailScreen() {
                         <span className={overdue ? 'font-medium text-danger' : undefined}>
                           Prevista {formatDateShort(inst.dueDate)} ({dueLabel(today, inst.dueDate)})
                         </span>
+                      ) : overdue ? (
+                        <span className="font-medium text-danger">
+                          Por receber · {dueLabel(today, overdueDateOf(inst, job, data.settings.overdueDays))}
+                        </span>
                       ) : (
-                        'Sem data prevista'
+                        'Por receber'
                       )}
                     </span>
                   </div>

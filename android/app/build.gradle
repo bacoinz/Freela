@@ -15,10 +15,10 @@ if (keystorePropsFile.exists()) {
 }
 
 android {
-    namespace = "pt.freelance.ganhos"
+    namespace = "pt.freela.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "pt.freelance.ganhos"
+        applicationId "pt.freela.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode

@@ -1,10 +1,10 @@
-# Ganhos
+# Freela
 
 App Android pessoal, 100% local (sem servidor, sem cloud), para registar ganhos de freelancer:
-- trabalhos pagos de uma vez ou em várias prestações (ex.: «450 € · 1/2 pagos · falta 225 €»);
+- trabalhos pagos de uma vez ou em várias prestações, cada uma «pendente» ou já paga (ex.: «450 € · 1/2 pagos · falta 225 €»);
 - pagadores guardados (com cor) ou avulsos;
 - rendimentos fixos mensais (ex.: aulas numa escola);
-- 15% de cada pagamento calculado para investir;
+- a percentagem para investir (15% por defeito, nas Definições) calculada em cada pagamento;
 - prazos e pagamentos ao Estado (Segurança Social, declaração trimestral, e-Fatura, IRS), com lembretes;
 - calendário, estatísticas, cópias de segurança e bloqueio com impressão digital.
 

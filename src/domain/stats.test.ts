@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { computeStats, presetRange } from './stats'
+import { computeStats, presetRange, statsYears } from './stats'
 import { mkData, mkInst, mkJob, resetIds } from './testkit'
 import type { AppData } from './types'
 
@@ -45,17 +45,27 @@ function sample(): AppData {
 }
 
 describe('presetRange', () => {
-  it('calcula os períodos pré-definidos', () => {
+  it('calcula os períodos: um ano, últimos 12 meses e tudo', () => {
     const data = sample()
-    expect(presetRange('thisYear', data, TODAY)).toEqual({ from: '2026-01-01', to: TODAY })
-    expect(presetRange('lastYear', data, TODAY)).toEqual({ from: '2025-01-01', to: '2025-12-31' })
-    expect(presetRange('last12', data, TODAY)).toEqual({ from: '2025-11-01', to: TODAY })
-    expect(presetRange('all', data, TODAY)).toEqual({ from: '2025-10-03', to: TODAY })
+    expect(presetRange({ kind: 'year', year: 2026 }, data, TODAY)).toEqual({ from: '2026-01-01', to: TODAY })
+    expect(presetRange({ kind: 'year', year: 2025 }, data, TODAY)).toEqual({ from: '2025-01-01', to: '2025-12-31' })
+    expect(presetRange({ kind: 'year', year: 2027 }, data, TODAY)).toEqual({ from: '2027-01-01', to: '2027-12-31' })
+    expect(presetRange({ kind: 'last12' }, data, TODAY)).toEqual({ from: '2025-11-01', to: TODAY })
+    expect(presetRange({ kind: 'all' }, data, TODAY)).toEqual({ from: '2025-10-03', to: TODAY })
+  })
+})
+
+describe('statsYears', () => {
+  it('do primeiro ano com dados até ao ano seguinte ao atual (no máximo 3)', () => {
+    expect(statsYears(mkData(), TODAY)).toEqual([2026, 2027])
+    expect(statsYears(sample(), TODAY)).toEqual([2025, 2026, 2027])
+    const old = mkData({ jobs: [mkJob({ installments: [rec(100, '2022-03-01', 'mbway')] })] })
+    expect(statsYears(old, TODAY)).toEqual([2025, 2026, 2027])
   })
 })
 
 describe('computeStats (este ano)', () => {
-  const s = () => computeStats(sample(), presetRange('thisYear', sample(), TODAY), TODAY)
+  const s = () => computeStats(sample(), presetRange({ kind: 'year', year: 2026 }, sample(), TODAY), TODAY)
 
   it('resumo: total, média mensal, trabalhos, valor médio e investimento', () => {
     const { summary } = s()
@@ -135,7 +145,7 @@ describe('computeStats (este ano)', () => {
 describe('computeStats sem dados', () => {
   it('não rebenta', () => {
     const data = mkData()
-    const st = computeStats(data, presetRange('all', data, TODAY), TODAY)
+    const st = computeStats(data, presetRange({ kind: 'all' }, data, TODAY), TODAY)
     expect(st.summary.total).toBe(0)
     expect(st.summary.avgPerJob).toBe(0)
     expect(st.summary.deltaPct).toBeUndefined()

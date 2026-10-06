@@ -29,7 +29,7 @@ function NumberSetting({ label, description, value, suffix, onSave }: { label: s
         <span className="font-medium">{label}</span>
         {description && <span className="text-sm text-muted">{description}</span>}
       </label>
-      <div className="relative w-24 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <input
           id={id}
           inputMode="decimal"
@@ -37,11 +37,9 @@ function NumberSetting({ label, description, value, suffix, onSave }: { label: s
           onChange={(e) => setText(e.target.value)}
           onBlur={commitValue}
           onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
-          className={`${inputClass} tnum h-11 pr-8 text-right`}
+          className={`${inputClass} tnum h-11 w-16 px-2 text-center`}
         />
-        <span aria-hidden className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted">
-          {suffix}
-        </span>
+        <span className="w-8 text-sm text-muted">{suffix}</span>
       </div>
     </div>
   )
@@ -135,7 +133,7 @@ export function SettingsScreen() {
             <ShieldCheck aria-hidden className="size-4" /> Os teus dados ficam só neste dispositivo.
           </span>
           <span className="inline-flex items-center gap-1">
-            <BriefcaseBusiness aria-hidden className="size-4" /> Ganhos · versão {__APP_VERSION__}
+            <BriefcaseBusiness aria-hidden className="size-4" /> Freela · versão {__APP_VERSION__}
           </span>
         </div>
       </Page>

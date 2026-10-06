@@ -9,7 +9,7 @@ $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 if (-not (Test-Path $adb)) { throw "Não encontrei o adb em $adb (vem com o Android SDK)." }
 
 $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-$apk = "release\Ganhos-v$version.apk"
+$apk = "release\Freela-v$version.apk"
 if (-not (Test-Path $apk)) { throw "Não encontrei $apk. Gera primeiro com: npm run apk" }
 
 $devices = & $adb devices | Select-String -Pattern '\tdevice$'

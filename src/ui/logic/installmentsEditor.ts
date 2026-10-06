@@ -16,9 +16,16 @@ export interface EditorRow {
 
 const sum = (rows: EditorRow[]) => rows.reduce((s, r) => s + r.amount, 0)
 
+/** Valores por defeito de um pagamento novo: já pago (na data do trabalho) ou pendente. */
+export interface RowDefaults {
+  paid: boolean
+  methodId: string
+}
+
 /**
- * Linhas para o modo escolhido. As prestações já recebidas nunca se perdem;
- * o resto do total é dividido pelas prestações por receber.
+ * Linhas para o modo escolhido. Os pagamentos já feitos nunca se perdem;
+ * o resto do total é dividido pelas linhas novas. A primeira linha nova fica paga
+ * (na data do trabalho) se `defaults.paid` e ainda não houver nada pago; as outras ficam pendentes.
  */
 export function rowsForMode(
   mode: EditorMode,
@@ -26,21 +33,24 @@ export function rowsForMode(
   workDate: ISODate,
   existing: EditorRow[],
   newKey: () => string,
+  defaults: RowDefaults,
 ): EditorRow[] {
   const received = existing.filter((r) => r.received)
   const pendingTotal = Math.max(0, total - sum(received))
 
   if (mode === 'custom') {
     const pending = existing.filter((r) => !r.received)
-    if (pending.length === 0) return [...received, { key: newKey(), amount: pendingTotal, dueDate: workDate }]
+    if (pending.length === 0) return [...received, { key: newKey(), amount: pendingTotal, dueDate: '' }]
     return applyTotal(existing, total)
   }
 
   const parts = mode === 'single' ? 1 : Math.max(1, 2 - received.length)
   const amounts = splitEven(pendingTotal, parts)
-  const fresh = amounts.map(
-    (amount, i): EditorRow => ({ key: newKey(), amount, dueDate: received.length === 0 && i === 0 ? workDate : '' }),
-  )
+  const fresh = amounts.map((amount, i): EditorRow => {
+    const row: EditorRow = { key: newKey(), amount, dueDate: '' }
+    if (i === 0 && defaults.paid && received.length === 0) row.received = { date: workDate, methodId: defaults.methodId }
+    return row
+  })
   return [...received, ...fresh]
 }
 

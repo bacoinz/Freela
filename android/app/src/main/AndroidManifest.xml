@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <!--
       allowBackup="false": os dados NÃO vão para o backup do Android/Google (decisão: tudo só local).
-      requestLegacyExternalStorage: só afeta o Android 10, para gravar cópias em Documentos/Ganhos.
+      requestLegacyExternalStorage: só afeta o Android 10, para gravar cópias em Documentos/Freela.
     -->
     <application
         android:allowBackup="false"
@@ -43,7 +43,7 @@
     <!-- Impressão digital / PIN do telemóvel para desbloquear a app. -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
-    <!-- Gravar cópias em Documentos/Ganhos — só é preciso no Android 10 ou anterior. -->
+    <!-- Gravar cópias em Documentos/Freela — só é preciso no Android 10 ou anterior. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
 </manifest>

@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { formatDateShort, formatPeriodPT, isoParts } from '../../domain/dates'
 import { formatMoney } from '../../domain/money'
-import { computeStats, presetRange, type StatsPreset } from '../../domain/stats'
+import { computeStats, presetRange, statsYears, type StatsPreset } from '../../domain/stats'
 import { useData } from '../../data/app'
 import { cn } from '../components/cn'
 import { Segmented } from '../components/Form'
@@ -14,22 +14,28 @@ import { BreakdownList, SplitMeter } from '../charts/Breakdown'
 import { MonthlyChart } from '../charts/MonthlyChart'
 import { useToday } from '../hooks'
 
-
 const cap = (s: string) => s.replace(/^./, (c) => c.toUpperCase())
 const pctFmt = new Intl.NumberFormat('pt-PT', { maximumFractionDigits: 0 })
 
 export function StatsScreen() {
   const data = useData()
   const today = useToday()
-  const [preset, setPreset] = useState<StatsPreset>('thisYear')
-  const [showTable, setShowTable] = useState(false)
-  const range = useMemo(() => presetRange(preset, data, today), [preset, data, today])
-  const s = useMemo(() => computeStats(data, range, today), [data, range, today])
   const year = isoParts(today)[0]
+  // Valor do seletor: "y2026", "y2027", "last12" ou "all".
+  const [choice, setChoice] = useState(`y${year}`)
+  const [showTable, setShowTable] = useState(false)
+  const years = useMemo(() => statsYears(data, today), [data, today])
+  const preset: StatsPreset = choice.startsWith('y') ? { kind: 'year', year: Number(choice.slice(1)) } : choice === 'last12' ? { kind: 'last12' } : { kind: 'all' }
+  const range = useMemo(() => presetRange(preset, data, today), [choice, data, today]) // eslint-disable-line react-hooks/exhaustive-deps
+  const s = useMemo(() => computeStats(data, range, today), [data, range, today])
 
   const periodLabel =
-    preset === 'thisYear' ? `em ${year} (até hoje)` : preset === 'lastYear' ? `em ${year - 1}` : preset === 'last12' ? 'nos últimos 12 meses' : 'desde o início'
-  const prevLabel = preset === 'thisYear' ? `mesmo período de ${year - 1}` : preset === 'lastYear' ? String(year - 2) : 'ano anterior'
+    preset.kind === 'year'
+      ? `em ${preset.year}${preset.year === year ? ' (até hoje)' : ''}`
+      : preset.kind === 'last12'
+        ? 'nos últimos 12 meses'
+        : 'desde o início'
+  const prevLabel = preset.kind === 'year' ? (preset.year === year ? `mesmo período de ${year - 1}` : String(preset.year - 1)) : 'ano anterior'
 
   return (
     <>
@@ -37,11 +43,10 @@ export function StatsScreen() {
       <Page withNav>
         <Segmented
           label="Período"
-          value={preset}
-          onChange={setPreset}
+          value={choice}
+          onChange={setChoice}
           options={[
-            { value: 'thisYear', label: String(year) },
-            { value: 'lastYear', label: String(year - 1) },
+            ...years.map((y) => ({ value: `y${y}`, label: String(y) })),
             { value: 'last12', label: '12 meses' },
             { value: 'all', label: 'Tudo' },
           ]}
@@ -50,7 +55,7 @@ export function StatsScreen() {
         <Card className="p-5">
           <p className="text-sm font-medium text-muted">Recebido {periodLabel}</p>
           <Money cents={s.summary.total} display className="mt-1 block text-[34px] font-bold leading-tight tracking-tight" />
-          {s.summary.deltaPct !== undefined && (
+          {s.summary.deltaPct !== undefined && s.summary.total > 0 && (
             <p className={cn('mt-1 flex items-center gap-1 text-sm font-semibold', s.summary.deltaPct >= 0 ? 'text-success' : 'text-danger')}>
               {s.summary.deltaPct >= 0 ? <TrendingUp aria-hidden className="size-4" /> : <TrendingDown aria-hidden className="size-4" />}
               {s.summary.deltaPct >= 0 ? '+' : ''}

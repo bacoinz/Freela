@@ -33,7 +33,7 @@ export function HomeScreen() {
 
   return (
     <>
-      <AppBar title="Ganhos" actions={<IconButton icon={Settings} label="Definições" to="/definicoes" />} />
+      <AppBar title="Freela" logo={<img src="/icon.svg" alt="" className="size-8 rounded-[9px]" />} actions={<IconButton icon={Settings} label="Definições" to="/definicoes" />} />
       <Page withNav>
         <MonthSwitcher period={period} onChange={setPeriod} today={today} />
 

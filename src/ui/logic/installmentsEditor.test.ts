@@ -7,35 +7,49 @@ const keyGen = () => {
 }
 
 describe('rowsForMode', () => {
-  it('pagamento único: uma linha com o total, prevista na data do trabalho', () => {
-    const rows = rowsForMode('single', 45000, '2026-10-10', [], keyGen())
-    expect(rows.map((r) => [r.amount, r.dueDate])).toEqual([[45000, '2026-10-10']])
+  const paid = { paid: true, methodId: 'mbway' }
+  const notPaid = { paid: false, methodId: 'mbway' }
+
+  it('de uma vez: uma linha com o total, já paga na data do trabalho (sem data prevista)', () => {
+    const rows = rowsForMode('single', 45000, '2026-10-10', [], keyGen(), paid)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ amount: 45000, dueDate: '', received: { date: '2026-10-10', methodId: 'mbway' } })
   })
 
-  it('2 vezes: metade no início (data do trabalho) e metade no fim (sem data)', () => {
-    const rows = rowsForMode('two', 45001, '2026-10-10', [], keyGen())
-    expect(rows.map((r) => [r.amount, r.dueDate])).toEqual([
-      [22500, '2026-10-10'],
-      [22501, ''],
+  it('de uma vez, num trabalho futuro: fica pendente', () => {
+    const rows = rowsForMode('single', 45000, '2026-12-10', [], keyGen(), notPaid)
+    expect(rows[0]!.received).toBeUndefined()
+  })
+
+  it('2 vezes: a 1.ª paga na data do trabalho e a 2.ª pendente', () => {
+    const rows = rowsForMode('two', 45001, '2026-10-10', [], keyGen(), paid)
+    expect(rows.map((r) => [r.amount, r.dueDate, r.received?.date ?? null])).toEqual([
+      [22500, '', '2026-10-10'],
+      [22501, '', null],
     ])
+  })
+
+  it('2 vezes num trabalho futuro: as duas pendentes', () => {
+    const rows = rowsForMode('two', 45000, '2026-12-10', [], keyGen(), notPaid)
+    expect(rows.map((r) => !!r.received)).toEqual([false, false])
   })
 
   it('personalizado: mantém as linhas existentes e acerta a última ao total', () => {
     const existing: EditorRow[] = [
-      { key: 'x', amount: 10000, dueDate: '2026-10-01' },
-      { key: 'y', amount: 10000, dueDate: '2026-11-01' },
-      { key: 'z', amount: 10000, dueDate: '2026-12-01' },
+      { key: 'x', amount: 10000, dueDate: '' },
+      { key: 'y', amount: 10000, dueDate: '' },
+      { key: 'z', amount: 10000, dueDate: '' },
     ]
-    const rows = rowsForMode('custom', 45000, '2026-10-10', existing, keyGen())
+    const rows = rowsForMode('custom', 45000, '2026-10-10', existing, keyGen(), paid)
     expect(rows.map((r) => r.amount)).toEqual([10000, 10000, 25000])
   })
 
-  it('nunca perde prestações já recebidas ao mudar de modo', () => {
+  it('nunca perde pagamentos já feitos ao mudar de modo (o resto fica pendente)', () => {
     const existing: EditorRow[] = [
       { key: 'x', id: 'i1', amount: 22500, dueDate: '2026-10-01', received: { date: '2026-10-01', methodId: 'mbway' } },
       { key: 'y', id: 'i2', amount: 22500, dueDate: '' },
     ]
-    const rows = rowsForMode('single', 45000, '2026-10-10', existing, keyGen())
+    const rows = rowsForMode('single', 45000, '2026-10-10', existing, keyGen(), paid)
     expect(rows.map((r) => [r.id, r.amount, !!r.received])).toEqual([
       ['i1', 22500, true],
       [undefined, 22500, false],

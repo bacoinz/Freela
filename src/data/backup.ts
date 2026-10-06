@@ -7,8 +7,8 @@ import type { AppData, ISODate } from '../domain/types'
 import { isNative } from './platform'
 
 /** Pasta em Documentos (no telemóvel) onde ficam as cópias e exportações. */
-export const BACKUP_DIR = 'Ganhos'
-const AUTO_RE = /^ganhos-backup-\d{4}-\d{2}-\d{2}\.json$/
+export const BACKUP_DIR = 'Freela'
+const AUTO_RE = /^freela-backup-\d{4}-\d{2}-\d{2}\.json$/
 const KEEP_AUTO = 14
 
 const pad2 = (n: number) => String(n).padStart(2, '0')
@@ -74,12 +74,12 @@ async function exportFile(name: string, content: string, mime: string, share: bo
 
 /** Cópia de segurança completa (JSON). */
 export function exportBackup(data: AppData, share = true): Promise<ExportResult> {
-  return exportFile(`ganhos-copia-${stamp()}.json`, backupJSON(data), 'application/json', share)
+  return exportFile(`freela-copia-${stamp()}.json`, backupJSON(data), 'application/json', share)
 }
 
 /** Trabalhos e prestações em CSV (para o Excel). */
 export function exportCSV(data: AppData, today: ISODate, share = true): Promise<ExportResult> {
-  return exportFile(`ganhos-${today}.csv`, jobsToCSV(data, today), 'text/csv', share)
+  return exportFile(`freela-${today}.csv`, jobsToCSV(data, today), 'text/csv', share)
 }
 
 async function listAutoBackups(): Promise<string[]> {
@@ -96,7 +96,7 @@ async function listAutoBackups(): Promise<string[]> {
 }
 
 /**
- * Cópia automática diária em Documentos/Ganhos (só no telemóvel), se houve alterações
+ * Cópia automática diária em Documentos/Freela (só no telemóvel), se houve alterações
  * desde a última. Guarda as últimas 14. Devolve true se gravou.
  */
 export async function autoBackupIfNeeded(data: AppData, today: ISODate): Promise<boolean> {
@@ -105,7 +105,7 @@ export async function autoBackupIfNeeded(data: AppData, today: ISODate): Promise
   if (s.lastAutoBackupDate === today) return false
   const changed = !s.lastAutoBackupDate || !s.lastChangeAt || s.lastChangeAt >= `${s.lastAutoBackupDate}T00:00`
   if (!changed) return false
-  await writeDocument(`ganhos-backup-${today}.json`, backupJSON(data))
+  await writeDocument(`freela-backup-${today}.json`, backupJSON(data))
   for (const old of (await listAutoBackups()).slice(KEEP_AUTO)) {
     await Filesystem.deleteFile({ path: `${BACKUP_DIR}/${old}`, directory: Directory.Documents }).catch(() => undefined)
   }
@@ -129,7 +129,7 @@ export async function latestAutoBackup(): Promise<{ name: string; data: AppData 
 
 /** Guarda o conteúdo estragado (ecrã de recuperação), para não se perder nada. */
 export function exportRaw(content: string): Promise<ExportResult> {
-  return exportFile(`ganhos-estragado-${stamp()}.json`, content, 'application/json', false)
+  return exportFile(`freela-estragado-${stamp()}.json`, content, 'application/json', false)
 }
 
 /** Lê e valida um ficheiro escolhido pelo utilizador. */
@@ -147,5 +147,5 @@ export async function readImportFile(file: File): Promise<AppData> {
 /** Antes de importar (substituir tudo), guarda uma cópia dos dados atuais. */
 export async function safetyCopy(data: AppData, reason: string): Promise<void> {
   if (!isNative) return
-  await writeDocument(`ganhos-${reason}-${stamp()}.json`, backupJSON(data))
+  await writeDocument(`freela-${reason}-${stamp()}.json`, backupJSON(data))
 }

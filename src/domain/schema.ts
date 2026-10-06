@@ -135,15 +135,18 @@ function migrate(obj: Record<string, unknown>): Record<string, unknown> {
   return obj
 }
 
+/** Marcas aceites no ficheiro de cópia ('ganhos' era o nome antigo da app). */
+const BACKUP_MARKS = new Set(['freela', 'ganhos'])
+
 /**
  * Valida (e migra) dados lidos do armazenamento ou de um ficheiro importado.
- * Aceita os dados diretos ou o formato de cópia de segurança `{ app: 'ganhos', data }`.
+ * Aceita os dados diretos ou o formato de cópia de segurança `{ app: 'freela', data }`.
  */
 export function parseAppData(raw: unknown): AppData {
   let obj = raw
-  if (isObject(obj) && obj.app === 'ganhos' && 'data' in obj) obj = obj.data
+  if (isObject(obj) && typeof obj.app === 'string' && BACKUP_MARKS.has(obj.app) && 'data' in obj) obj = obj.data
   if (!isObject(obj) || !('schemaVersion' in obj) || !('jobs' in obj)) {
-    throw new Error('Este ficheiro não parece ser uma cópia de segurança da app Ganhos.')
+    throw new Error('Este ficheiro não parece ser uma cópia de segurança da app Freela.')
   }
   if (typeof obj.schemaVersion === 'number' && obj.schemaVersion > SCHEMA_VERSION) {
     throw new Error('Este ficheiro foi criado por uma versão mais recente da app. Atualiza a app primeiro.')
@@ -158,7 +161,7 @@ export function parseAppData(raw: unknown): AppData {
 }
 
 export interface Backup {
-  app: 'ganhos'
+  app: 'freela'
   schemaVersion: number
   exportedAt: string
   data: AppData
@@ -166,5 +169,5 @@ export interface Backup {
 
 /** Formato do ficheiro de cópia de segurança. */
 export function makeBackup(data: AppData, exportedAt: string): Backup {
-  return { app: 'ganhos', schemaVersion: SCHEMA_VERSION, exportedAt, data }
+  return { app: 'freela', schemaVersion: SCHEMA_VERSION, exportedAt, data }
 }
