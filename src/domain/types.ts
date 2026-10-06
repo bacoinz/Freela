@@ -147,6 +147,8 @@ export interface Settings {
   reminderHour: number
   calendarColorMode: CalendarColorMode
   lockEnabled: boolean
+  /** Já se decidiu (automaticamente ou pelo utilizador) se o bloqueio fica ligado. */
+  lockInitialized?: boolean
   lastAutoBackupDate?: ISODate
   lastExportAt?: string
   lastChangeAt?: string

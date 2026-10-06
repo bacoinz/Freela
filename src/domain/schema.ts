@@ -109,6 +109,7 @@ const settings = z
     reminderHour: z.number().int().min(0).max(23).default(10),
     calendarColorMode: z.enum(['status', 'payer']).default('status'),
     lockEnabled: z.boolean().default(false),
+    lockInitialized: z.boolean().optional(),
     lastAutoBackupDate: isoDate.optional(),
     lastExportAt: z.string().optional(),
     lastChangeAt: z.string().optional(),
