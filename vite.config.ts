@@ -6,8 +6,8 @@ import tailwindcss from '@tailwindcss/vite'
 // A app é 100% local: nada de CDNs nem pedidos externos.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Caminhos relativos para funcionar dentro da APK (Capacitor).
-  base: './',
+  // O Capacitor serve a app na raiz (https://localhost/), por isso caminhos absolutos.
+  base: '/',
   build: {
     target: 'es2022',
     chunkSizeWarningLimit: 1500,

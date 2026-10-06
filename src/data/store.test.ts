@@ -61,6 +61,7 @@ describe('createAppStore', () => {
     await store.getState().init()
     expect(store.getState().status).toBe('error')
     expect(store.getState().error).toMatch(/não foi possível ler/i)
+    expect(store.getState().corruptRaw).toBe('{ isto não é json')
   })
 
   it('commit aplica a operação, marca a alteração e grava', async () => {

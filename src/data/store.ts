@@ -12,6 +12,8 @@ export interface AppState {
   status: LoadStatus
   /** Mensagem quando os dados guardados não puderam ser lidos. */
   error?: string
+  /** O conteúdo estragado (para o poder guardar antes de recuperar). */
+  corruptRaw?: string
   data: AppData | null
   /** Último erro ao gravar (ex.: armazenamento cheio). */
   saveError?: string
@@ -73,7 +75,7 @@ export function createAppStore(deps: StoreDeps) {
             data = parseAppData(JSON.parse(raw))
           } catch (e) {
             const why = e instanceof SyntaxError ? 'o ficheiro está estragado' : e instanceof Error ? e.message : String(e)
-            set({ status: 'error', error: `Não foi possível ler os dados guardados: ${why}` })
+            set({ status: 'error', error: `Não foi possível ler os dados guardados: ${why}`, corruptRaw: raw })
             return
           }
         }
@@ -95,12 +97,12 @@ export function createAppStore(deps: StoreDeps) {
       },
 
       replaceAll(data) {
-        set({ status: 'ready', error: undefined })
+        set({ status: 'ready', error: undefined, corruptRaw: undefined })
         persist(data)
       },
 
       startFresh() {
-        set({ status: 'ready', error: undefined })
+        set({ status: 'ready', error: undefined, corruptRaw: undefined })
         persist(createDefaultData(deps.makeCtx()))
       },
 
