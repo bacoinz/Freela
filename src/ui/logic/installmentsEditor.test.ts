@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyTotal, editRowAmount, rowsForMode, rowsToInput, type EditorRow } from './installmentsEditor'
+import { addRow, applyTotal, editRowAmount, removeRow, resplit, rowsForMode, rowsToInput, type EditorRow } from './installmentsEditor'
 
 const keyGen = () => {
   let n = 0
@@ -72,6 +72,44 @@ describe('rowsToInput', () => {
     expect(out).toEqual([
       { id: 'i1', amount: 100, dueDate: '2026-10-01', expectedMethodId: 'mbway' },
       { amount: 200, received: { date: '2026-10-02', methodId: 'transf' } },
+    ])
+  })
+})
+
+describe('resplit / addRow / removeRow', () => {
+  it('resplit divide o que falta por igual pelas prestações por receber, mantendo datas e métodos', () => {
+    const rows: EditorRow[] = [
+      { key: 'r', amount: 10000, dueDate: '2026-10-01', received: { date: '2026-10-01', methodId: 'mbway' } },
+      { key: 'a', amount: 0, dueDate: '2026-10-10', expectedMethodId: 'transf' },
+      { key: 'b', amount: 0, dueDate: '' },
+    ]
+    const out = resplit(rows, 30001)
+    expect(out.map((r) => r.amount)).toEqual([10000, 10000, 10001])
+    expect(out[1]).toMatchObject({ key: 'a', dueDate: '2026-10-10', expectedMethodId: 'transf' })
+  })
+
+  it('addRow acrescenta uma prestação e volta a dividir por igual', () => {
+    const rows: EditorRow[] = [
+      { key: 'a', amount: 22500, dueDate: '' },
+      { key: 'b', amount: 22500, dueDate: '' },
+    ]
+    const out = addRow(rows, 45000, () => 'c')
+    expect(out.map((r) => [r.key, r.amount])).toEqual([
+      ['a', 15000],
+      ['b', 15000],
+      ['c', 15000],
+    ])
+  })
+
+  it('removeRow tira a prestação e a última acerta o total', () => {
+    const rows: EditorRow[] = [
+      { key: 'a', amount: 15000, dueDate: '' },
+      { key: 'b', amount: 15000, dueDate: '' },
+      { key: 'c', amount: 15000, dueDate: '' },
+    ]
+    expect(removeRow(rows, 'b', 45000).map((r) => [r.key, r.amount])).toEqual([
+      ['a', 15000],
+      ['c', 30000],
     ])
   })
 })

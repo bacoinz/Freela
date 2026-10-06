@@ -76,3 +76,28 @@ export function rowsToInput(rows: EditorRow[]): InstallmentInput[] {
     return out
   })
 }
+
+/** Divide o que falta receber por igual pelas prestações por receber (mantém datas e métodos). */
+export function resplit(rows: EditorRow[], total: Cents): EditorRow[] {
+  const pendingIdx = rows.flatMap((r, i) => (r.received ? [] : [i]))
+  if (pendingIdx.length === 0) return rows
+  const received = rows.filter((r) => r.received).reduce((s, r) => s + r.amount, 0)
+  const parts = splitEven(Math.max(0, total - received), pendingIdx.length)
+  return rows.map((r, i) => {
+    const k = pendingIdx.indexOf(i)
+    return k >= 0 ? { ...r, amount: parts[k]! } : r
+  })
+}
+
+/** Acrescenta uma prestação por receber e divide de novo por igual. */
+export function addRow(rows: EditorRow[], total: Cents, newKey: () => string): EditorRow[] {
+  return resplit([...rows, { key: newKey(), amount: 0, dueDate: '' }], total)
+}
+
+/** Remove uma prestação; a última por receber acerta o total. */
+export function removeRow(rows: EditorRow[], key: string, total: Cents): EditorRow[] {
+  return applyTotal(
+    rows.filter((r) => r.key !== key),
+    total,
+  )
+}

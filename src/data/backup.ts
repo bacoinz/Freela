@@ -127,6 +127,11 @@ export async function latestAutoBackup(): Promise<{ name: string; data: AppData 
   return null
 }
 
+/** Guarda o conteúdo estragado (ecrã de recuperação), para não se perder nada. */
+export function exportRaw(content: string): Promise<ExportResult> {
+  return exportFile(`ganhos-estragado-${stamp()}.json`, content, 'application/json', false)
+}
+
 /** Lê e valida um ficheiro escolhido pelo utilizador. */
 export async function readImportFile(file: File): Promise<AppData> {
   const text = await file.text()
