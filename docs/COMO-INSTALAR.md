@@ -100,7 +100,10 @@ A pasta **`keystore\`** tem dois ficheiros:
 - `freela-release.jks`
 - `keystore.properties`
 
-O Android só aceita atualizações assinadas com esta chave. Se a perderes, para instalar uma versão nova vais ter de desinstalar a app, e isso apaga os dados.
+É esta chave que permite instalar versões novas por cima, mantendo os dados. O script usa-a sozinho em todas as compilações, por isso não tens de fazer nada com ela. O cuidado é só não a perder:
+- O Android só aceita atualizações assinadas com a mesma chave.
+- Sem ela, recusa a APK nova («App não instalada») e a única saída é desinstalar, o que apaga os dados.
+- Mesmo nesse caso, recuperas os dados importando a cópia mais recente de `Documentos/Freela` (ver ponto 7).
 
 **Copia a pasta `keystore\` para uma pen USB ou outro disco.** Não a partilhes com ninguém. Não está no git de propósito.
 
