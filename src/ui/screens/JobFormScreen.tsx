@@ -17,6 +17,7 @@ import {
   addRow,
   applyTotal,
   editRowAmount,
+  isLockedRow,
   removeRow,
   resplit,
   rowsForMode,
@@ -159,7 +160,8 @@ export function JobFormScreen() {
     if (!f.total || f.total <= 0) e.total = 'Indica o valor do trabalho.'
     if (!f.title.trim()) e.title = 'Escreve uma descrição (ex.: «Concerto no Hot Clube»).'
     if (!f.payer) e.payer = 'Indica quem paga.'
-    if (f.rows.some((r) => r.amount <= 0)) e.rows = 'Cada pagamento tem de ter um valor maior do que zero — revê os valores.'
+    // Sem total, basta o aviso do total (em "De uma vez" o valor do pagamento nem aparece).
+    if (f.total && f.rows.some((r) => r.amount <= 0)) e.rows = 'Cada pagamento tem de ter um valor maior do que zero — revê os valores.'
     if (f.rows.some((r) => r.received && !r.received.methodId)) e.rows = 'Indica como foi feito cada pagamento.'
     return e
   }
@@ -263,7 +265,7 @@ export function JobFormScreen() {
               showAmount={!single}
               methods={methods}
               today={today}
-              canRemove={f.mode === 'custom' && f.rows.length > 1 && !row.received}
+              canRemove={f.mode === 'custom' && f.rows.length > 1 && !isLockedRow(row)}
               onAmount={(a) => changeRowAmount(row.key, a)}
               onPatch={(p) => updateRow(row.key, p)}
               onTogglePending={() => togglePending(row)}

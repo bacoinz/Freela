@@ -16,6 +16,19 @@ export interface EditorRow {
 
 const sum = (rows: EditorRow[]) => rows.reduce((s, r) => s + r.amount, 0)
 
+/**
+ * Pagamento que já estava guardado como recebido (num trabalho existente): é um facto,
+ * por isso o valor não muda sozinho quando se mexe no total ou no modo.
+ * Um pagamento novo marcado como pago é só uma escolha no formulário e acompanha o total.
+ */
+export const isLockedRow = (r: EditorRow): boolean => !!r.id && !!r.received
+
+/** Linha que acerta o total: a última que não está fechada (ou, se estiverem todas, a última). */
+function balancingIndex(rows: EditorRow[]): number {
+  for (let i = rows.length - 1; i >= 0; i--) if (!isLockedRow(rows[i]!)) return i
+  return rows.length - 1
+}
+
 /** Valores por defeito de um pagamento novo: já pago (na data do trabalho) ou pendente. */
 export interface RowDefaults {
   paid: boolean
@@ -23,9 +36,10 @@ export interface RowDefaults {
 }
 
 /**
- * Linhas para o modo escolhido. Os pagamentos já feitos nunca se perdem;
- * o resto do total é dividido pelas linhas novas. A primeira linha nova fica paga
- * (na data do trabalho) se `defaults.paid` e ainda não houver nada pago; as outras ficam pendentes.
+ * Linhas para o modo escolhido: 1 em "De uma vez", 2 em "2 vezes"; "Personalizado" mantém as que há.
+ * Ficam primeiro os pagamentos já guardados como recebidos (nunca se perdem) e depois as primeiras
+ * linhas, que mantêm o estado (pago ou pendente). Se não houver nenhuma linha, a primeira nova fica
+ * paga na data do trabalho quando `defaults.paid`; as outras novas ficam pendentes.
  */
 export function rowsForMode(
   mode: EditorMode,
@@ -35,41 +49,33 @@ export function rowsForMode(
   newKey: () => string,
   defaults: RowDefaults,
 ): EditorRow[] {
-  const received = existing.filter((r) => r.received)
-  const pendingTotal = Math.max(0, total - sum(received))
-
-  if (mode === 'custom') {
-    const pending = existing.filter((r) => !r.received)
-    if (pending.length === 0) return [...received, { key: newKey(), amount: pendingTotal, dueDate: '' }]
-    return applyTotal(existing, total)
+  const fresh = (paid: boolean): EditorRow => {
+    const row: EditorRow = { key: newKey(), amount: 0, dueDate: '' }
+    if (paid) row.received = { date: workDate, methodId: defaults.methodId }
+    return row
   }
 
-  const parts = mode === 'single' ? 1 : Math.max(1, 2 - received.length)
-  const amounts = splitEven(pendingTotal, parts)
-  const fresh = amounts.map((amount, i): EditorRow => {
-    const row: EditorRow = { key: newKey(), amount, dueDate: '' }
-    if (i === 0 && defaults.paid && received.length === 0) row.received = { date: workDate, methodId: defaults.methodId }
-    return row
-  })
-  return [...received, ...fresh]
+  if (mode === 'custom') return applyTotal(existing.length > 0 ? existing : [fresh(defaults.paid)], total)
+
+  const count = mode === 'single' ? 1 : 2
+  const locked = existing.filter(isLockedRow).slice(0, count)
+  const others = existing.filter((r) => !isLockedRow(r)).slice(0, count - locked.length)
+  const kept = existing.filter((r) => locked.includes(r) || others.includes(r))
+  while (kept.length < count) kept.push(fresh(kept.length === 0 && defaults.paid))
+  return resplit(kept, total)
 }
 
-function lastPendingIndex(rows: EditorRow[]): number {
-  for (let i = rows.length - 1; i >= 0; i--) if (!rows[i]!.received) return i
-  return -1
-}
-
-/** Altera o valor de uma linha; se não for a última por receber, a última acerta o total. */
+/** Altera o valor de uma linha; se não for a que acerta o total, essa acerta-o. */
 export function editRowAmount(rows: EditorRow[], key: string, amount: Cents, total: Cents): EditorRow[] {
   const next = rows.map((r) => (r.key === key ? { ...r, amount } : r))
-  const last = lastPendingIndex(next)
+  const last = balancingIndex(next)
   if (last < 0 || next[last]!.key === key) return next
   return applyTotal(next, total)
 }
 
-/** A última prestação por receber passa a ser o total menos as outras. */
+/** A última prestação que não está fechada passa a ser o total menos as outras. */
 export function applyTotal(rows: EditorRow[], total: Cents): EditorRow[] {
-  const last = lastPendingIndex(rows)
+  const last = balancingIndex(rows)
   if (last < 0) return rows
   const others = sum(rows) - rows[last]!.amount
   return rows.map((r, i) => (i === last ? { ...r, amount: total - others } : r))
@@ -87,14 +93,17 @@ export function rowsToInput(rows: EditorRow[]): InstallmentInput[] {
   })
 }
 
-/** Divide o que falta receber por igual pelas prestações por receber (mantém datas e métodos). */
+/**
+ * Divide o total por igual pelas linhas que não estão fechadas (mantém datas e métodos);
+ * os pagamentos já guardados como recebidos ficam com o valor que têm.
+ */
 export function resplit(rows: EditorRow[], total: Cents): EditorRow[] {
-  const pendingIdx = rows.flatMap((r, i) => (r.received ? [] : [i]))
-  if (pendingIdx.length === 0) return rows
-  const received = rows.filter((r) => r.received).reduce((s, r) => s + r.amount, 0)
-  const parts = splitEven(Math.max(0, total - received), pendingIdx.length)
+  const freeIdx = rows.flatMap((r, i) => (isLockedRow(r) ? [] : [i]))
+  if (freeIdx.length === 0) return applyTotal(rows, total)
+  const locked = sum(rows.filter(isLockedRow))
+  const parts = splitEven(Math.max(0, total - locked), freeIdx.length)
   return rows.map((r, i) => {
-    const k = pendingIdx.indexOf(i)
+    const k = freeIdx.indexOf(i)
     return k >= 0 ? { ...r, amount: parts[k]! } : r
   })
 }
