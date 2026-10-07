@@ -1,8 +1,8 @@
-import { addDays, endOfPeriod, periodOf, startOfPeriod } from '../../domain/dates'
+import { addDays, addMonths, endOfPeriod, periodOf, startOfPeriod } from '../../domain/dates'
 import { isReceived, jobTotal } from '../../domain/installments'
 import { installmentInvest, isInstallmentOverdue, overdueDateOf } from '../../domain/jobs'
 import { listOccurrences, type Occurrence } from '../../domain/obligations'
-import { recurringDueDate } from '../../domain/recurring'
+import { recurringAppliesTo, recurringDueDate } from '../../domain/recurring'
 import type { AppData, Cents, ISODate, Installment, Job, Period } from '../../domain/types'
 
 export interface PendingItem {
@@ -18,6 +18,8 @@ export interface PendingItem {
 export interface FixedStatus {
   recurringId: string
   title: string
+  /** Mês de trabalho a que o pagamento diz respeito. */
+  period: Period
   amount: Cents
   dueDate: ISODate
   received: boolean
@@ -85,20 +87,22 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
   }
 
   const fixed: FixedStatus[] = []
-  const [, m] = period.split('-').map(Number) as [number, number]
   for (const rec of data.recurring) {
-    const job = data.jobs.find((j) => j.recurringId === rec.id && j.period === period)
+    // O pagamento que chega neste mês: o do próprio mês ou, se é pago no mês seguinte, o do mês anterior.
+    const work = rec.payMonth === 'next' ? addMonths(period, -1) : period
+    const job = data.jobs.find((j) => j.recurringId === rec.id && j.period === work)
     if (job) {
       fixed.push({
         recurringId: rec.id,
         title: rec.title,
+        period: work,
         amount: jobTotal(job),
         dueDate: job.installments[0]?.dueDate ?? job.workDate,
         received: job.installments.every(isReceived),
         jobId: job.id,
       })
-    } else if (rec.active && rec.months.includes(m) && !rec.skippedPeriods.includes(period) && period > periodOf(today)) {
-      fixed.push({ recurringId: rec.id, title: rec.title, amount: rec.amount, dueDate: recurringDueDate(rec, period), received: false })
+    } else if (work > periodOf(today) && recurringAppliesTo(rec, work)) {
+      fixed.push({ recurringId: rec.id, title: rec.title, period: work, amount: rec.amount, dueDate: recurringDueDate(rec, work), received: false })
     }
   }
 

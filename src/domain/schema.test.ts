@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createDefaultData } from './defaults'
 import { makeBackup, parseAppData } from './schema'
-import { mkCtx, mkInst, mkJob, resetIds } from './testkit'
+import { mkCtx, mkInst, mkJob, mkRecurring, resetIds } from './testkit'
 
 beforeEach(() => resetIds())
 
@@ -24,6 +24,13 @@ describe('parseAppData', () => {
   it('aceita dados válidos sem os alterar', () => {
     const d = sample()
     expect(parseAppData(JSON.parse(JSON.stringify(d)))).toEqual(d)
+  })
+
+  it('guarda o mês do pagamento dos rendimentos fixos (e aceita dados antigos sem ele)', () => {
+    const d = sample()
+    d.recurring.push(mkRecurring({ payerId: 'p1', payMonth: 'next' }), mkRecurring({ id: 'rec2', payerId: 'p1' }))
+    const back = parseAppData(JSON.parse(JSON.stringify(d)))
+    expect(back.recurring.map((r) => r.payMonth)).toEqual(['next', undefined])
   })
 
   it('aceita o formato de cópia de segurança exportado', () => {

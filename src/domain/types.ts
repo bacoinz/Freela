@@ -67,9 +67,14 @@ export interface RecurringIncome {
   amount: Cents
   /** Dia previsto do pagamento (1–31; em meses curtos usa-se o último dia). */
   dayOfMonth: number
+  /**
+   * Em que mês chega o pagamento de cada mês de trabalho: no próprio mês (por omissão)
+   * ou no seguinte (ex.: o trabalho de setembro é pago a 15 de outubro).
+   */
+  payMonth?: 'same' | 'next'
   methodId?: string
   investPct?: number
-  /** Meses em que há pagamento (1–12). */
+  /** Meses de trabalho que contam (1–12). */
   months: number[]
   /** Primeiro mês a gerar. */
   startPeriod: Period

@@ -59,6 +59,13 @@ describe('calendarEvents', () => {
       expect.objectContaining({ kind: 'expected', virtual: true, amount: 60000, color: '#6366f1', title: 'Aulas — Escola de Música X' }),
     ])
   })
+
+  it('rendimento pago no mês seguinte: o previsto aparece no mês em que o pagamento chega', () => {
+    const data = mkData({ payers: [escola], recurring: [mkRecurring({ payerId: 'p-escola', dayOfMonth: 15, payMonth: 'next' })] })
+    // O mês de trabalho de novembro é pago a 15 de dezembro; em novembro não chega nada previsto.
+    expect(calendarEvents(data, '2026-12', TODAY)['2026-12-15']).toEqual([expect.objectContaining({ kind: 'expected', virtual: true, amount: 60000 })])
+    expect(calendarEvents(data, '2026-11', TODAY)['2026-11-15']).toBeUndefined()
+  })
 })
 
 describe('monthSummary', () => {

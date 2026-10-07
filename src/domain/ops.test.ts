@@ -130,6 +130,28 @@ describe('deleteJob / rendimentos fixos', () => {
     expect(updated.data.recurring).toHaveLength(1)
     expect(updated.data.recurring[0]).toMatchObject({ id: created.id, amount: 65000 })
   })
+
+  it('upsertRecurring: mudar o dia ou o mês do pagamento muda as datas dos meses ainda por receber', () => {
+    const rec = mkRecurring({ dayOfMonth: 5, startPeriod: '2026-09' })
+    let data = applyRecurring(mkData({ payers: [{ id: 'p-escola', name: 'Escola X', color: '#000' }], recurring: [rec] }), ctx())
+    // Setembro já foi recebido; outubro ainda não.
+    data = {
+      ...data,
+      jobs: data.jobs.map((j) => (j.period === '2026-09' ? { ...j, installments: [{ ...j.installments[0]!, receivedDate: '2026-09-05', methodId: 'transf' }] } : j)),
+    }
+    const next = upsertRecurring(data, { ...rec, dayOfMonth: 15, payMonth: 'next' }, ctx()).data
+    const month = (p: string) => next.jobs.find((j) => j.period === p)!
+    expect([month('2026-09').workDate, month('2026-09').installments[0]!.dueDate]).toEqual(['2026-09-05', '2026-09-05'])
+    expect([month('2026-10').workDate, month('2026-10').installments[0]!.dueDate]).toEqual(['2026-10-15', '2026-11-15'])
+  })
+
+  it('upsertRecurring: não mexe num mês cuja data foi mudada à mão', () => {
+    const rec = mkRecurring({ dayOfMonth: 5 })
+    let data = applyRecurring(mkData({ payers: [{ id: 'p-escola', name: 'Escola X', color: '#000' }], recurring: [rec] }), ctx())
+    data = { ...data, jobs: data.jobs.map((j) => ({ ...j, installments: [{ ...j.installments[0]!, dueDate: '2026-10-08' }] })) }
+    const next = upsertRecurring(data, { ...rec, dayOfMonth: 15, payMonth: 'next' }, ctx()).data
+    expect(next.jobs[0]!.installments[0]!.dueDate).toBe('2026-10-08')
+  })
 })
 
 describe('duplicateJob', () => {

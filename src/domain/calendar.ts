@@ -99,7 +99,7 @@ export function calendarEvents(data: AppData, period: Period, today: ISODate): R
 
   if (period > periodOf(today)) {
     for (const v of virtualRecurring(data, today, period)) {
-      if (v.period !== period) continue
+      if (periodOf(v.dueDate) !== period) continue // conta o mês em que o pagamento chega
       const p = data.payers.find((x) => x.id === v.recurring.payerId)
       add({
         kind: 'expected',

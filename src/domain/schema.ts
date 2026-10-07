@@ -46,6 +46,7 @@ const recurring = z.object({
   payerId: z.string(),
   amount: cents,
   dayOfMonth: z.number().int().min(1).max(31),
+  payMonth: z.enum(['same', 'next']).optional(),
   methodId: z.string().optional(),
   investPct: z.number().min(0).max(100).optional(),
   months: z.array(month),

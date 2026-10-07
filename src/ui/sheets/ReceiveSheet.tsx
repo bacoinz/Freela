@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
+import { formatPeriodPT } from '../../domain/dates'
 import { formatMoney, percentOf } from '../../domain/money'
 import { receive } from '../../domain/ops'
 import { isReceived } from '../../domain/installments'
@@ -79,7 +80,8 @@ export function ReceiveSheet({ target, onClose }: { target: ReceiveTarget | null
       }
     >
       <p className="text-[15px] text-muted">
-        <span className="font-semibold text-ink">{job.title}</span> · {payerLabel(job, data.payers)}
+        <span className="font-semibold text-ink">{job.title}</span>
+        {job.period && ` · ${formatPeriodPT(job.period).split(' de ')[0]}`} · {payerLabel(job, data.payers)}
       </p>
       <Field
         label="Valor recebido"

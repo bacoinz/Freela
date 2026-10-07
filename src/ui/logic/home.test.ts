@@ -44,6 +44,20 @@ describe('monthOverview', () => {
     expect(o.fixed).toEqual([expect.objectContaining({ title: 'Aulas — Escola de Música X', amount: 60000, dueDate: '2026-10-05', received: false, jobId: 'fix' })])
   })
 
+  it('rendimento pago no mês seguinte: mostra o pagamento que chega neste mês (o do mês anterior)', () => {
+    const d = mkData({
+      payers: [{ id: 'p-escola', name: 'Escola X', color: '#10b981' }],
+      recurring: [mkRecurring({ payerId: 'p-escola', dayOfMonth: 15, payMonth: 'next', startPeriod: '2026-09' })],
+      jobs: [
+        mkJob({ id: 'set', recurringId: 'rec1', period: '2026-09', payerId: 'p-escola', payerName: undefined, workDate: '2026-09-15', installments: [mkInst({ amount: 60000, dueDate: '2026-10-15' })] }),
+        mkJob({ id: 'out', recurringId: 'rec1', period: '2026-10', payerId: 'p-escola', payerName: undefined, workDate: '2026-10-15', installments: [mkInst({ amount: 60000, dueDate: '2026-11-15' })] }),
+      ],
+    })
+    expect(monthOverview(d, '2026-10', TODAY).fixed).toEqual([expect.objectContaining({ jobId: 'set', period: '2026-09', dueDate: '2026-10-15', received: false })])
+    // Mês futuro, ainda sem trabalho criado: previsão com a data certa.
+    expect(monthOverview(d, '2026-12', TODAY).fixed).toEqual([expect.objectContaining({ period: '2026-11', dueDate: '2026-12-15', received: false })])
+  })
+
   it('próximos prazos dos 30 dias seguintes ainda por fazer', () => {
     const o = monthOverview(data(), '2026-10', TODAY)
     expect(o.nextObligations.map((x) => `${x.rule.template}@${x.dueDate}`)).toEqual(['ss-declaracao-trimestral@2026-10-31'])

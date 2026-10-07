@@ -8,7 +8,7 @@ import { commit, useData } from '../../../data/app'
 import { BottomBar, Button } from '../../components/Button'
 import { cn } from '../../components/cn'
 import { confirm, toast, toastError } from '../../components/Feedback'
-import { Chip, ChipRow, Field, MoneyInput, Select, TextInput, Toggle, inputClass } from '../../components/Form'
+import { Chip, ChipRow, Field, MoneyInput, Segmented, Select, TextInput, Toggle, inputClass } from '../../components/Form'
 import { AppBar, Card, Page } from '../../components/Layout'
 import { PayerPicker } from '../../components/Payer'
 import { useToday } from '../../hooks'
@@ -29,7 +29,9 @@ export function RecurringFormScreen() {
   const [payer, setPayer] = useState<PayerInput | null>(rec ? { kind: 'saved', id: rec.payerId } : null)
   const [categoryId, setCategoryId] = useState(rec?.categoryId ?? data.categories.find((c) => !c.archived)?.id ?? '')
   const [amount, setAmount] = useState<Cents | null>(rec?.amount ?? null)
-  const [day, setDay] = useState(String(rec?.dayOfMonth ?? 5))
+  const [day, setDay] = useState(String(rec?.dayOfMonth ?? 15))
+  // Normalmente o trabalho de um mês é pago no mês seguinte (ex.: setembro pago em outubro).
+  const [payMonth, setPayMonth] = useState<'same' | 'next'>(rec ? (rec.payMonth ?? 'same') : 'next')
   const [methodId, setMethodId] = useState(rec?.methodId ?? '')
   const [months, setMonths] = useState<number[]>(rec?.months ?? ALL)
   const [startPeriod, setStartPeriod] = useState(rec?.startPeriod ?? periodOf(today))
@@ -62,6 +64,7 @@ export function RecurringFormScreen() {
           payerId,
           amount: amount ?? 0,
           dayOfMonth: Number.isInteger(dayN) ? dayN : 0,
+          payMonth,
           months,
           startPeriod,
           skippedPeriods: rec?.skippedPeriods ?? [],
@@ -127,6 +130,20 @@ export function RecurringFormScreen() {
             </Select>
           </Field>
         </div>
+        <Field
+          label="Quando é pago"
+          hint={payMonth === 'next' ? `Ex.: o mês de setembro é pago a ${day} de outubro.` : `Ex.: o mês de outubro é pago a ${day} de outubro.`}
+        >
+          <Segmented
+            label="Quando é pago"
+            value={payMonth}
+            onChange={setPayMonth}
+            options={[
+              { value: 'same', label: 'No próprio mês' },
+              { value: 'next', label: 'No mês seguinte' },
+            ]}
+          />
+        </Field>
         <Field label="Como costuma pagar" htmlFor={ids.method} optional>
           <Select id={ids.method} value={methodId} onChange={(e) => setMethodId(e.target.value)}>
             <option value="">—</option>
@@ -141,7 +158,7 @@ export function RecurringFormScreen() {
         </Field>
         <Card className="flex flex-col gap-3 p-4">
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold">Meses com pagamento</span>
+            <span className="font-semibold">Meses de trabalho</span>
             <div className="flex shrink-0 gap-1 whitespace-nowrap">
               <button type="button" className="rounded-lg px-2 py-1.5 text-sm font-semibold text-primary-ink" onClick={() => setMonths(ALL)}>
                 Todos
@@ -159,7 +176,7 @@ export function RecurringFormScreen() {
             ))}
           </ChipRow>
         </Card>
-        <Field label="Começa em" htmlFor={ids.start} hint="Mês a partir do qual a app cria os pagamentos «a receber».">
+        <Field label="Começa em" htmlFor={ids.start} hint="Primeiro mês de trabalho a contar. A app cria os pagamentos «a receber» a partir daí.">
           <input id={ids.start} type="month" value={startPeriod} onChange={(e) => e.target.value && setStartPeriod(e.target.value)} className={cn(inputClass, 'tnum')} />
         </Field>
         <Card>

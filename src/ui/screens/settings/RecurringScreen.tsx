@@ -21,7 +21,7 @@ export function RecurringScreen() {
         </p>
         {data.recurring.length === 0 ? (
           <Card>
-            <EmptyState icon={Repeat} title="Sem rendimentos fixos" text="Ex.: «Aulas — Escola de Música», 600 €, dia 5." />
+            <EmptyState icon={Repeat} title="Sem rendimentos fixos" text="Ex.: «Aulas — Escola de Música», 600 €, pagas a dia 15 do mês seguinte." />
           </Card>
         ) : (
           <ListCard>
@@ -33,7 +33,7 @@ export function RecurringScreen() {
                   to={`/definicoes/fixos/${r.id}`}
                   leading={<PayerAvatar name={payer?.name ?? r.title} color={payer?.color} />}
                   title={r.title}
-                  subtitle={`${formatMoney(r.amount)} · dia ${r.dayOfMonth} · ${monthsText(r.months)}`}
+                  subtitle={`${formatMoney(r.amount)} · dia ${r.dayOfMonth}${r.payMonth === 'next' ? ' do mês seguinte' : ''} · ${monthsText(r.months)}`}
                   right={!r.active && <Badge tone="neutral">Pausado</Badge>}
                 />
               )

@@ -71,7 +71,8 @@ export function HomeScreen() {
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-medium">{f.title}</span>
                     <span className="text-sm text-muted">
-                      <Money cents={f.amount} /> · {f.received ? 'recebido' : `previsto ${formatDayMonth(f.dueDate)}`}
+                      <Money cents={f.amount} /> · {f.period !== period && `${formatPeriodPT(f.period).split(' de ')[0]} · `}
+                      {f.received ? 'recebido' : `previsto ${formatDayMonth(f.dueDate)}`}
                     </span>
                   </div>
                   {f.received ? (
@@ -201,6 +202,7 @@ function PendingRow({ item, today, payer, color, onReceive }: { item: PendingIte
           <span className="truncate font-medium">{job.title}</span>
           <span className="text-sm text-muted">
             <Money cents={installment.amount} className="font-semibold text-ink" />
+            {job.period && ` · ${formatPeriodPT(job.period).split(' de ')[0]}`}
             {n > 1 && ` · ${paidCount(job)}/${n} pagos`}
             {' · '}
             <span className={item.overdue ? 'font-medium text-danger' : undefined}>

@@ -2,7 +2,7 @@
 import { addDays, diffDays } from './dates'
 import { receiveInstallment, undoInstallment, type Receipt } from './installments'
 import { nextPayerColor, normalizeName } from './payers'
-import { generateRecurringJobs } from './recurring'
+import { generateRecurringJobs, recurringDueDate, recurringWorkDate } from './recurring'
 import type {
   AppData,
   Category,
@@ -298,11 +298,34 @@ export function upsertRecurring(
   requireCategory(data, rec.categoryId)
   const id = rec.id && data.recurring.some((r) => r.id === rec.id) ? rec.id : ctx.newId()
   const clean: RecurringIncome = { ...rec, id, title, months: [...new Set(rec.months)].sort((a, b) => a - b) }
-  const exists = data.recurring.some((r) => r.id === id)
+  const old = data.recurring.find((r) => r.id === id)
   return {
-    data: { ...data, recurring: exists ? data.recurring.map((r) => (r.id === id ? clean : r)) : [...data.recurring, clean] },
+    data: {
+      ...data,
+      recurring: old ? data.recurring.map((r) => (r.id === id ? clean : r)) : [...data.recurring, clean],
+      jobs: old ? redateRecurringJobs(data.jobs, old, clean, ctx.nowISO()) : data.jobs,
+    },
     id,
   }
+}
+
+/**
+ * Mudou o dia ou o mês do pagamento: os meses ainda por receber passam para as datas novas.
+ * Só mexe nos que ainda têm as datas automáticas (não estraga datas mudadas à mão).
+ */
+function redateRecurringJobs(jobs: Job[], old: RecurringIncome, next: RecurringIncome, now: string): Job[] {
+  if (old.dayOfMonth === next.dayOfMonth && (old.payMonth ?? 'same') === (next.payMonth ?? 'same')) return jobs
+  return jobs.map((job) => {
+    const inst = job.installments[0]
+    if (job.recurringId !== old.id || !job.period || job.installments.length !== 1 || !inst || inst.receivedDate) return job
+    if (inst.dueDate !== recurringDueDate(old, job.period)) return job
+    return {
+      ...job,
+      workDate: job.workDate === recurringWorkDate(old, job.period) ? recurringWorkDate(next, job.period) : job.workDate,
+      installments: [{ ...inst, dueDate: recurringDueDate(next, job.period) }],
+      updatedAt: now,
+    }
+  })
 }
 
 /** Apaga o rendimento fixo (os trabalhos já criados ficam). */
