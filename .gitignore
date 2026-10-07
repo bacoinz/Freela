@@ -11,6 +11,7 @@ android/app/build/
 android/local.properties
 android/.idea/
 android/captures/
+android/.kotlin/
 *.apk
 *.aab
 release/

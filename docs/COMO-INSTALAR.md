@@ -27,12 +27,22 @@ No telemóvel, abre `http://<IP-do-PC>:5173`. O IP aparece no terminal. Continua
 
 ## 2. Preparar o PC para gerar a APK (só uma vez)
 
-1. Instala o **Android Studio**, versão 2025.2.1 ou mais recente:
-   - em <https://developer.android.com/studio>;
-   - ou no terminal: `winget install Google.AndroidStudio`.
-2. Abre o Android Studio uma vez, escolhe a instalação **Standard** e aceita as licenças.
-   - Isto instala o Android SDK em `%LOCALAPPDATA%\Android\Sdk`.
-   - O Android Studio traz o Java 21 de que a app precisa. O teu Java 17 não é alterado.
+Precisas de duas coisas: o **Android SDK** e o **Java 21**. Neste PC já está tudo instalado.
+
+1. **Android SDK** (as ferramentas da Google), em `%LOCALAPPDATA%\Android\Sdk`. Há duas formas de o instalar:
+   - **Pelo Android Studio** (<https://developer.android.com/studio>): abre-o uma vez, escolhe a instalação **Standard** e aceita as licenças. Ocupa 1 a 3 GB, porque inclui o emulador.
+   - **Só o essencial**, cerca de 280 MB. Foi assim que se fez neste PC:
+     1. Descarrega as «Command line tools only» em <https://developer.android.com/studio#command-line-tools-only>.
+     2. Descompacta a pasta `cmdline-tools` para `%LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest`.
+     3. Corre no PowerShell (o `--no-metrics` desliga o envio de estatísticas de uso para a Google):
+
+        ```powershell
+        & "$env:LOCALAPPDATA\Android\Sdk\cmdline-tools\latest\bin\android.exe" --no-metrics sdk install platform-tools platforms/android-36 build-tools/35.0.0
+        ```
+2. **Java 21**, que o Capacitor 8 exige. O Java 25 que vem com o Android Studio recente é novo demais para o Gradle do projeto.
+   - Neste PC está em `%LOCALAPPDATA%\Android\jdk-21`: é o Eclipse Temurin 21 (<https://adoptium.net>), só descompactado.
+   - Também serve instalá-lo com `winget install EclipseAdoptium.Temurin.21.JDK`.
+   - O script escolhe sozinho um Java do 21 ao 24. O teu Java 17 global não é alterado.
 3. Não precisas de abrir o projeto no Android Studio; o script trata de tudo.
 
 ---
@@ -116,4 +126,5 @@ O Android só aceita atualizações assinadas com esta chave. Se a perderes, par
 |---|---|
 | «App não instalada» ao atualizar | A APK nova foi assinada com outra chave, ou tem uma versão mais baixa. Usa a mesma pasta `keystore\` e aumenta a versão. |
 | Não chegam notificações | Definições do Android → Apps → Freela → Notificações: liga-as. Em Definições → Lembretes da app, usa «Enviar notificação de teste». A poupança de bateria pode atrasar um pouco os lembretes. |
-| `npm run apk` diz que não encontra o JDK ou o SDK | Abre o Android Studio uma vez e conclui o assistente. Se o instalaste noutra pasta, define a variável `FREELA_JAVA_HOME` com o caminho da pasta `jbr`. |
+| `npm run apk` diz que não encontra o Java 21 ou o SDK | Vê o ponto 2. Se o Java 21 estiver noutra pasta, define a variável `FREELA_JAVA_HOME` com o caminho dessa pasta. |
+| O Gradle falha com «Unsupported class file major version 69» | Está a usar o Java 25. Instala o Java 21 (ponto 2); o script passa a usá-lo sozinho. |
