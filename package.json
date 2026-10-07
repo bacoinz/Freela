@@ -1,7 +1,7 @@
 {
   "name": "freela",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Freela — registo de ganhos de freelancer, app Android 100% local",
   "type": "module",
   "scripts": {
