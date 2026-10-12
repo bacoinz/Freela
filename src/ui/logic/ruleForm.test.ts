@@ -16,6 +16,12 @@ describe('ruleToForm / formToRule', () => {
     },
   )
 
+  it('lê o ícone escolhido (sem ícone: fica o do tipo)', () => {
+    const rule = defaultObligationRules('2026-10-06', () => 'x')[0]!
+    expect(ruleToForm({ ...rule, icon: 'guitar' }, '2026-10-06').icon).toBe('guitar')
+    expect(ruleToForm(rule, '2026-10-06').icon).toBeNull()
+  })
+
   it('um prazo novo começa como anual, com lembrete semanal até ao prazo', () => {
     const f = ruleToForm(undefined, '2026-10-06')
     expect(f).toMatchObject({ title: '', kind: 'pagamento', schedType: 'yearly', remType: 'repeat', until: 'due', active: true })

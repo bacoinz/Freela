@@ -94,6 +94,7 @@ const obligationRule = z.object({
   active: z.boolean(),
   startDate: isoDate,
   template: z.string().optional(),
+  icon: z.string().optional(),
   notes: z.string().optional(),
 })
 

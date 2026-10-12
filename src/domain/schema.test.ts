@@ -58,6 +58,12 @@ describe('parseAppData', () => {
     expect(out.jobs[0]).not.toHaveProperty('investPct')
   })
 
+  it('guarda o ícone escolhido de um prazo', () => {
+    const d = sample()
+    d.obligationRules[0]!.icon = 'guitar'
+    expect(parseAppData(JSON.parse(JSON.stringify(d))).obligationRules[0]!.icon).toBe('guitar')
+  })
+
   it('guarda os planos de investimento e as marcas de investido', () => {
     const d = sample()
     d.settings.investPlans.push({ from: '2026-11', pct: 20, destinations: [{ id: 'a', name: 'Ações', where: 'Corretora', pct: 100 }] })

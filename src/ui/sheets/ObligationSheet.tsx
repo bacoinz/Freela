@@ -1,4 +1,4 @@
-import { Banknote, CalendarClock, FileText, ListChecks, RotateCcw, type LucideIcon } from 'lucide-react'
+import { CalendarClock, RotateCcw } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { formatDateLong, formatDateShort } from '../../domain/dates'
 import { formatMoney } from '../../domain/money'
@@ -11,13 +11,9 @@ import { toast, toastError } from '../components/Feedback'
 import { DateInput, Field, MoneyInput } from '../components/Form'
 import { Sheet } from '../components/Sheet'
 import { useToday } from '../hooks'
+import { ruleIcon } from '../obligationIcons'
 import { dueLabel } from '../logic/relative'
 
-export const KIND_ICON: Record<ObligationKind, LucideIcon> = {
-  pagamento: Banknote,
-  declaracao: FileText,
-  outro: ListChecks,
-}
 
 const DONE_TEXT: Record<ObligationKind, string> = { pagamento: 'Pago', declaracao: 'Entregue', outro: 'Feito' }
 
@@ -46,7 +42,7 @@ export function ObligationSheet({ occ, onClose }: { occ: Occurrence | null; onCl
   if (!occ) return <Sheet open={false} onClose={onClose} title="" children={null} />
 
   const { rule } = occ
-  const Icon = KIND_ICON[rule.kind]
+  const Icon = ruleIcon(rule)
   const done = occ.state === 'done' || occ.state === 'notApplicable'
   const run = (fn: Parameters<typeof commit>[0], msg: string) => {
     try {

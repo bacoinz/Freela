@@ -9,13 +9,14 @@ import { AppBar, Card, EmptyState, ListCard, Page, Section } from '../components
 import { Badge, Money } from '../components/Status'
 import { useToday } from '../hooks'
 import { dueLabel } from '../logic/relative'
-import { KIND_ICON, ObligationSheet } from '../sheets/ObligationSheet'
+import { ruleIcon } from '../obligationIcons'
+import { ObligationSheet } from '../sheets/ObligationSheet'
 
 const DONE_TEXT = { pagamento: 'Pago', declaracao: 'Entregue', outro: 'Feito' } as const
 
 /** Linha de uma obrigação (usada também no Início e no Calendário). */
 export function ObligationRow({ occ, today, onOpen }: { occ: Occurrence; today: string; onOpen: () => void }) {
-  const Icon = KIND_ICON[occ.rule.kind]
+  const Icon = ruleIcon(occ.rule)
   const done = occ.state === 'done' || occ.state === 'notApplicable'
   return (
     <button type="button" onClick={onOpen} className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-surface-2">

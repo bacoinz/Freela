@@ -5,7 +5,7 @@ import { Button } from '../components/Button'
 import { AppBar, ListCard, ListRow, Page } from '../components/Layout'
 import { Badge } from '../components/Status'
 import { reminderText, scheduleText } from '../logic/texts'
-import { KIND_ICON } from '../sheets/ObligationSheet'
+import { ruleIcon } from '../obligationIcons'
 
 export function ObligationRulesScreen() {
   const data = useData()
@@ -21,7 +21,7 @@ export function ObligationRulesScreen() {
         </p>
         <ListCard>
           {rules.map((r) => {
-            const Icon = KIND_ICON[r.kind]
+            const Icon = ruleIcon(r)
             return (
               <ListRow
                 key={r.id}

@@ -8,6 +8,8 @@ export type FromType = 'dueMonthStart' | 'fixedDate' | 'daysBefore'
 export interface RuleForm {
   title: string
   kind: ObligationKind
+  /** Ícone escolhido (null = o do tipo). */
+  icon: string | null
   schedType: SchedType
   /** Número do dia ou 'last'. */
   day: string
@@ -36,6 +38,7 @@ export function ruleToForm(r: ObligationRule | undefined, today: ISODate): RuleF
   return {
     title: r?.title ?? '',
     kind: r?.kind ?? 'pagamento',
+    icon: r?.icon ?? null,
     schedType: s?.type ?? 'yearly',
     day: s && 'day' in s ? String(s.day) : '20',
     months: s?.type === 'months' ? s.months : [1, 4, 7, 10],

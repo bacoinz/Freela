@@ -1,16 +1,19 @@
-import { Check, Trash2 } from 'lucide-react'
+import { Check, Pencil, Trash2 } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router'
 import { addDays, formatDateShort, MONTHS_PT, MONTHS_SHORT_PT } from '../../domain/dates'
 import { reminderDates, scheduleDatesBetween } from '../../domain/obligations'
 import { removeObligationRule, upsertObligationRule } from '../../domain/ops'
-import type { ObligationRule } from '../../domain/types'
+import type { ObligationKind, ObligationRule } from '../../domain/types'
 import { commit, useData } from '../../data/app'
 import { BottomBar, Button } from '../components/Button'
 import { confirm, toast, toastError } from '../components/Feedback'
 import { Chip, ChipRow, DateInput, Field, MoneyInput, Segmented, Select, TextArea, TextInput, Toggle, inputClass } from '../components/Form'
+import { cn } from '../components/cn'
 import { AppBar, Card, Page } from '../components/Layout'
+import { Sheet } from '../components/Sheet'
 import { useToday } from '../hooks'
+import { KIND_ICON, OBLIGATION_ICONS, ruleIcon } from '../obligationIcons'
 import { formToRule, ruleToForm, type FromType, type RuleForm, type SchedType } from '../logic/ruleForm'
 import { reminderText, scheduleText } from '../logic/texts'
 
@@ -23,6 +26,8 @@ export function ObligationRuleFormScreen() {
   const rule = isNew ? undefined : data.obligationRules.find((r) => r.id === id)
   const [f, setF] = useState<RuleForm>(() => ruleToForm(rule, today))
   const [error, setError] = useState<string | null>(null)
+  const [pickingIcon, setPickingIcon] = useState(false)
+  const RuleIcon = ruleIcon({ kind: f.kind, icon: f.icon ?? undefined })
   const ids = { title: useId(), day: useId(), amount: useId(), notes: useId() }
   const set = (p: Partial<RuleForm>) => setF((s) => ({ ...s, ...p }))
 
@@ -56,6 +61,7 @@ export function ObligationRuleFormScreen() {
             id: rule?.id,
             title: f.title,
             kind: f.kind,
+            icon: f.icon ?? undefined,
             schedule: built.schedule,
             reminders: built.reminders,
             defaultAmount: f.kind === 'pagamento' && f.defaultAmount ? f.defaultAmount : undefined,
@@ -89,7 +95,20 @@ export function ObligationRuleFormScreen() {
       <AppBar title={isNew ? 'Novo prazo' : 'Editar prazo'} back="/obrigacoes/prazos" />
       <Page withBottomBar>
         <Field label="Descrição" htmlFor={ids.title}>
-          <TextInput id={ids.title} value={f.title} onChange={(e) => set({ title: e.target.value })} placeholder="Ex.: Pagar seguro do instrumento" />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPickingIcon(true)}
+              aria-label="Escolher o ícone do prazo"
+              className="relative flex size-12 shrink-0 items-center justify-center rounded-xl border border-line bg-neutral-soft text-ink hover:bg-surface-2"
+            >
+              <RuleIcon aria-hidden className="size-6" />
+              <span aria-hidden className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full border border-line bg-surface text-muted">
+                <Pencil className="size-3" />
+              </span>
+            </button>
+            <TextInput id={ids.title} value={f.title} onChange={(e) => set({ title: e.target.value })} placeholder="Ex.: Pagar seguro do instrumento" />
+          </div>
         </Field>
         <Field label="Tipo">
           <Segmented
@@ -262,11 +281,61 @@ export function ObligationRuleFormScreen() {
           </Button>
         )}
       </Page>
+      <IconPicker
+        open={pickingIcon}
+        kind={f.kind}
+        value={f.icon}
+        onClose={() => setPickingIcon(false)}
+        onPick={(icon) => {
+          set({ icon })
+          setPickingIcon(false)
+        }}
+      />
       <BottomBar>
         <Button block size="lg" icon={Check} onClick={save}>
           Guardar
         </Button>
       </BottomBar>
     </>
+  )
+}
+
+/** Folha para escolher o ícone de um prazo: o do tipo (por defeito) ou um da lista. */
+function IconPicker({
+  open,
+  kind,
+  value,
+  onClose,
+  onPick,
+}: {
+  open: boolean
+  kind: ObligationKind
+  value: string | null
+  onClose: () => void
+  onPick: (icon: string | null) => void
+}) {
+  const KindIcon = KIND_ICON[kind]
+  const option = (key: string, label: string, Icon: typeof KindIcon, selected: boolean, onClick: () => void) => (
+    <button
+      key={key}
+      type="button"
+      onClick={onClick}
+      aria-pressed={selected}
+      className={cn(
+        'flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] leading-tight',
+        selected ? 'bg-primary-soft text-primary-ink ring-2 ring-primary' : 'bg-neutral-soft text-muted hover:bg-surface-2',
+      )}
+    >
+      <Icon aria-hidden className={cn('size-6', selected ? 'text-primary-ink' : 'text-ink')} />
+      <span className="max-w-full truncate">{label}</span>
+    </button>
+  )
+  return (
+    <Sheet open={open} onClose={onClose} title="Ícone do prazo">
+      <div className="grid grid-cols-4 gap-2 pb-2 min-[380px]:grid-cols-5">
+        {option('auto', 'Pelo tipo', KindIcon, value === null, () => onPick(null))}
+        {OBLIGATION_ICONS.map((i) => option(i.id, i.label, i.Icon, value === i.id, () => onPick(i.id)))}
+      </div>
+    </Sheet>
   )
 }

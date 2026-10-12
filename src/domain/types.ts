@@ -148,6 +148,8 @@ export interface ObligationRule {
   startDate: ISODate
   /** Identificador do modelo pré-carregado (ex.: 'ss-pagamento'). */
   template?: string
+  /** Ícone escolhido (id da lista de ícones); sem ele, usa o do tipo. */
+  icon?: string
   notes?: string
 }
 
