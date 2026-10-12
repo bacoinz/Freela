@@ -126,7 +126,7 @@ describe('pendingInvestments / investOverview', () => {
     ])
   })
 
-  it('resume o por investir e o já investido, por destino', () => {
+  it('resume o por investir por destino e lista o histórico dos investidos', () => {
     const o = investOverview(data(), TODAY)
     expect(o.pendingTotal).toBe(8750)
     expect(o.pendingParts.map((p) => [p.destinationId, p.amount])).toEqual([
@@ -135,12 +135,7 @@ describe('pendingInvestments / investOverview', () => {
       ['poupanca', 1350],
       ['bitcoin', 5400],
     ])
-    expect(o.investedTotal).toBe(3000)
-    expect(o.investedParts.map((p) => [p.name, p.amount])).toEqual([
-      ['Conta poupança', 600],
-      ['Bitcoin', 2400],
-    ])
-    expect(o.recent.map((r) => r.job.id)).toEqual(['feito'])
+    expect(o.invested.map((r) => r.job.id)).toEqual(['feito'])
   })
 })
 

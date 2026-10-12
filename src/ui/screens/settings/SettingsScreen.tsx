@@ -101,9 +101,9 @@ export function SettingsScreen() {
             />
             <ListRow
               icon={PiggyBank}
-              title="Destinos do investimento"
+              title="Divisão do investimento"
               subtitle={plan.destinations.map((d) => `${d.name} ${pctText(d.pct)}%`).join(' · ')}
-              to="/investir"
+              to="/definicoes/investimento"
             />
             <NumberSetting
               label="Dias até ficar em atraso"

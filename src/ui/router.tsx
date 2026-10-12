@@ -11,6 +11,7 @@ import { ObligationRulesScreen } from './screens/ObligationRulesScreen'
 import { ObligationsScreen } from './screens/ObligationsScreen'
 import { CategoriesScreen, MethodsScreen, PayersScreen } from './screens/settings/ListsScreens'
 import { DataScreen } from './screens/settings/DataScreen'
+import { InvestPlanScreen } from './screens/settings/InvestPlanScreen'
 import { RecurringFormScreen } from './screens/settings/RecurringFormScreen'
 import { RecurringScreen } from './screens/settings/RecurringScreen'
 import { RemindersScreen } from './screens/settings/RemindersScreen'
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
       { path: 'obrigacoes/prazos/:id', Component: ObligationRuleFormScreen },
       { path: 'investir', Component: InvestScreen },
       { path: 'definicoes', Component: SettingsScreen },
+      { path: 'definicoes/investimento', Component: InvestPlanScreen },
       { path: 'definicoes/fixos', Component: RecurringScreen },
       { path: 'definicoes/fixos/:id', Component: RecurringFormScreen },
       { path: 'definicoes/lembretes', Component: RemindersScreen },

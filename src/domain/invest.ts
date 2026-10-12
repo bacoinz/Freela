@@ -133,10 +133,8 @@ export interface InvestOverview {
   pendingTotal: Cents
   pendingParts: InvestPart[]
   months: PendingInvestMonth[]
-  investedTotal: Cents
-  investedParts: InvestPart[]
-  /** Últimos pagamentos marcados como investidos. */
-  recent: { job: Job; installment: Installment }[]
+  /** Pagamentos já investidos (histórico, o mais recente primeiro). */
+  invested: { job: Job; installment: Installment }[]
 }
 
 export function investOverview(data: AppData, today: ISODate): InvestOverview {
@@ -148,14 +146,11 @@ export function investOverview(data: AppData, today: ISODate): InvestOverview {
       b.installment.invested!.date.localeCompare(a.installment.invested!.date) ||
       (b.installment.receivedDate ?? '').localeCompare(a.installment.receivedDate ?? ''),
   )
-  const investedParts = sumParts(invested.map((x) => x.installment.invested!.parts))
   return {
     pendingTotal: all.reduce((s, i) => s + i.amount, 0),
     pendingParts: sumParts(all.map((i) => i.parts)),
     months,
-    investedTotal: sumAmounts(investedParts),
-    investedParts,
-    recent: invested.slice(0, 10),
+    invested,
   }
 }
 

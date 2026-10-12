@@ -79,9 +79,7 @@ export function StatsScreen() {
               {formatMoney(s.summary.invest)} {periodLabel}
               {s.investExpected > 0 && ` · previsto mais ${formatMoney(s.investExpected)}`}
             </span>
-            <span className="text-sm text-muted">
-              Investido {formatMoney(s.investDone)} · por investir {formatMoney(s.investPending)}
-            </span>
+            {s.investPending > 0 && <span className="text-sm text-muted">Por investir {formatMoney(s.investPending)}</span>}
             {s.investDoneParts.length > 0 && (
               <ul className="mt-2 flex flex-col gap-1 border-t border-line pt-2 text-sm" aria-label="Já investido em cada destino">
                 {s.investDoneParts.map((p) => (
