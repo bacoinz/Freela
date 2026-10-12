@@ -42,7 +42,7 @@ export function HomeScreen() {
           <p className="text-sm font-medium text-muted">Recebido em {month}</p>
           <Money cents={o.received} display className="mt-1 block text-[34px] font-bold leading-tight tracking-tight" />
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <InvestStat pct={currentPlan(data, today).pct} pending={o.investPending} pendingMonth={o.investPendingMonth} />
+            <InvestStat pct={currentPlan(data, today).pct} pending={o.investPending} />
             <MiniStat icon={Wallet} label="Fica para ti" cents={o.kept} tone="success" />
           </div>
           {o.statePaid > 0 && (
@@ -191,7 +191,7 @@ export function ReceiveButton({ onClick, active = false }: { onClick: () => void
 }
 
 /** Cartão «Para investir» do Início: mostra o que falta investir e abre a página do investimento. */
-function InvestStat({ pct, pending, pendingMonth }: { pct: number; pending: number; pendingMonth: number }) {
+function InvestStat({ pct, pending }: { pct: number; pending: number }) {
   return (
     <Link
       to="/investir"
@@ -204,9 +204,6 @@ function InvestStat({ pct, pending, pendingMonth }: { pct: number; pending: numb
         <ChevronRight aria-hidden className="-mr-1 size-4 shrink-0" />
       </span>
       <Money cents={pending} display className="mt-0.5 block text-lg font-bold" />
-      <span className="text-xs text-info">
-        {pending > 0 && (pendingMonth > 0 ? `deste mês: ${formatMoney(pendingMonth)}` : 'de meses anteriores')}
-      </span>
     </Link>
   )
 }

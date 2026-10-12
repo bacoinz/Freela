@@ -33,8 +33,6 @@ export interface MonthOverview {
   invest: Cents
   /** Recebido e ainda por investir, de qualquer mês. */
   investPending: Cents
-  /** Recebido neste mês e ainda por investir. */
-  investPendingMonth: Cents
   kept: Cents
   statePaid: Cents
   pending: { total: Cents; count: number; overdueCount: number; overdueTotal: Cents; items: PendingItem[] }
@@ -53,7 +51,6 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
   let received = 0
   let invest = 0
   let investPending = 0
-  let investPendingMonth = 0
   const recent: { job: Job; installment: Installment }[] = []
   const pendingItems: PendingItem[] = []
   let pendingTotal = 0
@@ -71,10 +68,7 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
           received += inst.amount
           invest += share
         }
-        if (!inst.invested) {
-          investPending += share
-          if (inMonth) investPendingMonth += share
-        }
+        if (!inst.invested) investPending += share
         continue
       }
       remaining += inst.amount
@@ -129,7 +123,6 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
     received,
     invest,
     investPending,
-    investPendingMonth,
     kept: received - invest,
     statePaid,
     pending: {

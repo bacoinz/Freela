@@ -31,12 +31,12 @@ describe('monthOverview', () => {
     expect(o.statePaid).toBe(12000)
   })
 
-  it('por investir: tudo o que falta (de qualquer mês) e a parte deste mês', () => {
+  it('por investir: tudo o que falta, de qualquer mês', () => {
     const d = data()
-    expect(monthOverview(d, '2026-10', TODAY)).toMatchObject({ investPending: 3000 + 3375, investPendingMonth: 3000 })
+    expect(monthOverview(d, '2026-10', TODAY)).toMatchObject({ investPending: 3000 + 3375 })
     const a = d.jobs.find((j) => j.id === 'a')!
     a.installments[0]!.invested = { date: TODAY, parts: [{ destinationId: 'poupanca', name: 'Conta poupança', amount: 3000 }] }
-    expect(monthOverview(d, '2026-10', TODAY)).toMatchObject({ invest: 3000, investPending: 3375, investPendingMonth: 0 })
+    expect(monthOverview(d, '2026-10', TODAY)).toMatchObject({ invest: 3000, investPending: 3375 })
   })
 
   it('lista o que falta receber (atrasados primeiro) com totais', () => {
