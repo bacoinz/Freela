@@ -177,3 +177,39 @@ describe('computeStats sem dados', () => {
     expect(st.byMethod).toEqual([])
   })
 })
+
+describe('investimento por mês, em fatias', () => {
+  it('divide o investimento de cada mês pelos destinos do plano desse mês (ou pela fotografia)', () => {
+    const d = mkData({
+      jobs: [
+        mkJob({ installments: [mkInst({ amount: 10000, receivedDate: '2026-10-05', methodId: 'mbway' })] }),
+        mkJob({ installments: [mkInst({ amount: 10000, receivedDate: '2026-11-03', methodId: 'mbway' })] }),
+        mkJob({
+          installments: [
+            mkInst({
+              amount: 10000,
+              receivedDate: '2026-11-04',
+              methodId: 'mbway',
+              invested: { date: '2026-11-05', parts: [{ destinationId: 'poupanca', name: 'Conta poupança', amount: 2000 }] },
+            }),
+          ],
+        }),
+      ],
+    })
+    d.settings.investPlans = [
+      d.settings.investPlans[0]!,
+      { from: '2026-11', pct: 20, destinations: [{ id: 'a', name: 'Ações', pct: 50 }, { id: 'b', name: 'Bitcoin', pct: 50 }] },
+    ]
+    const st = computeStats(d, { from: '2026-10-01', to: '2026-11-30' }, '2026-11-20')
+    expect(st.monthly.map((m) => [m.period, m.invest, m.investParts])).toEqual([
+      ['2026-10', 1500, { 'conta poupança': 300, bitcoin: 1200 }],
+      ['2026-11', 4000, { ações: 1000, bitcoin: 1000, 'conta poupança': 2000 }],
+    ])
+    // Séries do gráfico: os destinos do plano atual primeiro, depois os outros; o mesmo nome junta-se numa fatia.
+    expect(st.investSeries).toEqual([
+      { key: 'ações', name: 'Ações', total: 1000 },
+      { key: 'bitcoin', name: 'Bitcoin', total: 2200 },
+      { key: 'conta poupança', name: 'Conta poupança', total: 2300 },
+    ])
+  })
+})

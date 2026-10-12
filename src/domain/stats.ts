@@ -1,6 +1,6 @@
 import { addMonths, diffDays, isoParts, makeDate, periodOf, periodRange, startOfPeriod } from './dates'
 import { isReceived, remainingAmount } from './installments'
-import { installmentInvest, jobInvestDone, jobInvestExpected, jobInvestPending, sumParts } from './invest'
+import { installmentInvest, installmentParts, jobInvestDone, jobInvestExpected, jobInvestPending, planFor, sumParts } from './invest'
 import { isInstallmentOverdue, overdueDateOf } from './jobs'
 import { NEUTRAL_COLOR, payerColor, payerKey, payerLabel } from './payers'
 import type { AppData, Cents, ISODate, Period, InvestPart } from './types'
@@ -18,6 +18,8 @@ export interface ReceivedEntry {
   date: ISODate
   amount: Cents
   invest: Cents
+  /** Quanto do investimento vai para cada destino. */
+  parts: InvestPart[]
   methodId: string
   categoryId: string
   payerKey: string
@@ -25,10 +27,21 @@ export interface ReceivedEntry {
   recurring: boolean
 }
 
+/** Uma fatia do investimento nos gráficos: destinos com o mesmo nome contam juntos. */
+export interface InvestSeries {
+  key: string
+  name: string
+  total: Cents
+}
+
+export const investKey = (name: string) => name.trim().toLocaleLowerCase('pt-PT')
+
 export interface MonthTotal {
   period: Period
   total: Cents
   invest: Cents
+  /** Investimento do mês por destino (chave: `investKey` do nome). */
+  investParts: Record<string, Cents>
   byCategory: Record<string, Cents>
 }
 
@@ -79,6 +92,8 @@ export interface Stats {
   range: DateRange
   summary: StatsSummary
   monthly: MonthTotal[]
+  /** Destinos do investimento no período (os do plano atual primeiro), com o total de cada um. */
+  investSeries: InvestSeries[]
   best?: MonthTotal
   worst?: MonthTotal
   byMethod: Breakdown[]
@@ -106,6 +121,7 @@ export function receivedEntries(data: AppData): ReceivedEntry[] {
         date: inst.receivedDate!,
         amount: inst.amount,
         invest: installmentInvest(inst, data.settings.investPlans, inst.receivedDate!),
+        parts: installmentParts(inst, data.settings.investPlans, inst.receivedDate!),
         methodId: inst.methodId ?? '',
         categoryId: job.categoryId,
         payerKey: payerKey(job),
@@ -250,6 +266,7 @@ export function computeStats(data: AppData, range: DateRange, today: ISODate): S
     period,
     total: 0,
     invest: 0,
+    investParts: {},
     byCategory: {},
   }))
   const monthIdx = new Map(monthly.map((m, i) => [m.period, i]))
@@ -258,6 +275,22 @@ export function computeStats(data: AppData, range: DateRange, today: ISODate): S
     m.total += e.amount
     m.invest += e.invest
     m.byCategory[e.categoryId] = (m.byCategory[e.categoryId] ?? 0) + e.amount
+  }
+
+  // Fatias do investimento: os destinos do plano atual primeiro; o nome que fica é o do plano atual ou o mais recente.
+  const series = new Map<string, InvestSeries>()
+  for (const dest of planFor(plans, periodOf(today)).destinations) series.set(investKey(dest.name), { key: investKey(dest.name), name: dest.name, total: 0 })
+  const current = new Set(series.keys())
+  for (const e of entries) {
+    const m = monthly[monthIdx.get(periodOf(e.date))!]!
+    for (const p of e.parts) {
+      const key = investKey(p.name)
+      const sr = series.get(key) ?? { key, name: p.name, total: 0 }
+      if (!current.has(key)) sr.name = p.name
+      sr.total += p.amount
+      series.set(key, sr)
+      m.investParts[key] = (m.investParts[key] ?? 0) + p.amount
+    }
   }
   let best: MonthTotal | undefined
   let worst: MonthTotal | undefined
@@ -300,6 +333,7 @@ export function computeStats(data: AppData, range: DateRange, today: ISODate): S
     range,
     summary,
     monthly,
+    investSeries: [...series.values()].filter((x) => x.total > 0),
     byMethod: breakdown(entries, (e) => e.methodId, methodName),
     byCategory: breakdown(
       entries,
