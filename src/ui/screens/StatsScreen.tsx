@@ -11,8 +11,7 @@ import { AppBar, Card, EmptyState, ListCard, Page, Section } from '../components
 import { PayerAvatar } from '../components/Payer'
 import { Money } from '../components/Status'
 import { BreakdownList, SplitMeter } from '../charts/Breakdown'
-import { chartSeries, InvestChart } from '../charts/InvestChart'
-import { MonthlyChart } from '../charts/MonthlyChart'
+import { chartSeries, MonthlyChart } from '../charts/MonthlyChart'
 import { useToday } from '../hooks'
 
 const cap = (s: string) => s.replace(/^./, (c) => c.toUpperCase())
@@ -25,7 +24,6 @@ export function StatsScreen() {
   // Valor do seletor: "y2026", "y2027", "last12" ou "all".
   const [choice, setChoice] = useState(`y${year}`)
   const [showTable, setShowTable] = useState(false)
-  const [showInvestTable, setShowInvestTable] = useState(false)
   const years = useMemo(() => statsYears(data, today), [data, today])
   const preset: StatsPreset = choice.startsWith('y') ? { kind: 'year', year: Number(choice.slice(1)) } : choice === 'last12' ? { kind: 'last12' } : { kind: 'all' }
   const range = useMemo(() => presetRange(preset, data, today), [choice, data, today]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -119,7 +117,7 @@ export function StatsScreen() {
             )}
 
             <Section
-              title="Recebido por mês"
+              title="Recebido e investido por mês"
               action={
                 <button type="button" onClick={() => setShowTable((v) => !v)} className="rounded-lg px-2 py-1.5 text-sm font-semibold text-primary-ink">
                   {showTable ? 'Ver gráfico' : 'Ver tabela'}
@@ -133,68 +131,34 @@ export function StatsScreen() {
                       <tr>
                         <th className="px-4 py-2 font-semibold">Mês</th>
                         <th className="px-4 py-2 text-right font-semibold">Recebido</th>
-                        <th className="px-4 py-2 text-right font-semibold">Investir</th>
+                        <th className="px-4 py-2 text-right font-semibold">Investido</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-line">
                       {[...s.monthly].reverse().map((m) => (
                         <tr key={m.period}>
-                          <td className="px-4 py-2.5">{cap(formatPeriodPT(m.period))}</td>
-                          <td className="tnum px-4 py-2.5 text-right font-medium">{formatMoney(m.total)}</td>
-                          <td className="tnum px-4 py-2.5 text-right text-muted">{formatMoney(m.invest)}</td>
+                          <td className="px-4 py-2.5">
+                            {cap(formatPeriodPT(m.period))}
+                            {m.invest > 0 && (
+                              <span className="block text-xs text-muted">
+                                {investSeries
+                                  .filter((x) => (m.investParts[x.key] ?? 0) > 0)
+                                  .map((x) => `${x.name} ${formatMoney(m.investParts[x.key]!)}`)
+                                  .join(' · ')}
+                              </span>
+                            )}
+                          </td>
+                          <td className="tnum px-4 py-2.5 text-right align-top font-medium">{formatMoney(m.total)}</td>
+                          <td className="tnum px-4 py-2.5 text-right align-top text-muted">{formatMoney(m.invest)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 ) : (
-                  <MonthlyChart months={s.monthly} best={s.best?.period} />
+                  <MonthlyChart months={s.monthly} series={chartSeries(s.summary.total - s.summary.invest, investSeries)} best={s.best?.period} />
                 )}
               </Card>
             </Section>
-
-            {investSeries.length > 0 && (
-              <Section
-                title="Investimento por mês"
-                action={
-                  <button type="button" onClick={() => setShowInvestTable((v) => !v)} className="rounded-lg px-2 py-1.5 text-sm font-semibold text-primary-ink">
-                    {showInvestTable ? 'Ver gráfico' : 'Ver tabela'}
-                  </button>
-                }
-              >
-                <Card className={showInvestTable ? 'overflow-hidden' : 'px-2 pb-3 pt-3'}>
-                  {showInvestTable ? (
-                    <table className="w-full text-sm">
-                      <thead className="bg-surface-2 text-left text-muted">
-                        <tr>
-                          <th className="px-4 py-2 font-semibold">Mês</th>
-                          <th className="px-4 py-2 text-right font-semibold">Investimento</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-line">
-                        {[...s.monthly].reverse().map((m) => (
-                          <tr key={m.period}>
-                            <td className="px-4 py-2.5">
-                              {cap(formatPeriodPT(m.period))}
-                              {m.invest > 0 && (
-                                <span className="block text-xs text-muted">
-                                  {investSeries
-                                    .filter((x) => (m.investParts[x.key] ?? 0) > 0)
-                                    .map((x) => `${x.name} ${formatMoney(m.investParts[x.key]!)}`)
-                                    .join(' · ')}
-                                </span>
-                              )}
-                            </td>
-                            <td className="tnum px-4 py-2.5 text-right align-top font-medium">{formatMoney(m.invest)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <InvestChart months={s.monthly} series={chartSeries(investSeries)} />
-                  )}
-                </Card>
-              </Section>
-            )}
 
             <Section title="Por método de recebimento">
               <Card>
