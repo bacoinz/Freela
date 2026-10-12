@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { RootLayout, TabsLayout } from './Root'
 import { CalendarScreen } from './screens/CalendarScreen'
 import { HomeScreen } from './screens/HomeScreen'
+import { InvestScreen } from './screens/InvestScreen'
 import { JobDetailScreen } from './screens/JobDetailScreen'
 import { JobFormScreen } from './screens/JobFormScreen'
 import { JobsScreen } from './screens/JobsScreen'
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: 'trabalhos/:id/editar', Component: JobFormScreen },
       { path: 'obrigacoes/prazos', Component: ObligationRulesScreen },
       { path: 'obrigacoes/prazos/:id', Component: ObligationRuleFormScreen },
+      { path: 'investir', Component: InvestScreen },
       { path: 'definicoes', Component: SettingsScreen },
       { path: 'definicoes/fixos', Component: RecurringScreen },
       { path: 'definicoes/fixos/:id', Component: RecurringFormScreen },

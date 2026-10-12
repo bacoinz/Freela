@@ -79,6 +79,9 @@ export function StatsScreen() {
               {formatMoney(s.summary.invest)} {periodLabel}
               {s.investExpected > 0 && ` · previsto mais ${formatMoney(s.investExpected)}`}
             </span>
+            <span className="text-sm text-muted">
+              Investido {formatMoney(s.investDone)} · por investir {formatMoney(s.investPending)}
+            </span>
           </div>
         </Card>
 

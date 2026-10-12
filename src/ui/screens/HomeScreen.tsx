@@ -1,12 +1,15 @@
-import { CircleCheck, Info, PiggyBank, Plus, Repeat, Settings, Wallet } from 'lucide-react'
+import { ChevronRight, Circle, CircleCheck, Info, PiggyBank, Plus, Repeat, Settings, Wallet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { diffDays, formatDateShort, formatDayMonth, formatPeriodPT, periodOf, todayISO } from '../../domain/dates'
 import { paidCount } from '../../domain/installments'
+import { currentPlan, pctText } from '../../domain/invest'
+import { formatMoney } from '../../domain/money'
 import { payerColor, payerLabel } from '../../domain/payers'
 import type { Occurrence } from '../../domain/obligations'
 import { useData } from '../../data/app'
 import { Fab, IconButton } from '../components/Button'
+import { cn } from '../components/cn'
 import { AppBar, Card, EmptyState, ListCard, Page, Section, TextLink } from '../components/Layout'
 import { MonthSwitcher } from '../components/Nav'
 import { PayerAvatar } from '../components/Payer'
@@ -41,7 +44,7 @@ export function HomeScreen() {
           <p className="text-sm font-medium text-muted">Recebido em {month}</p>
           <Money cents={o.received} display className="mt-1 block text-[34px] font-bold leading-tight tracking-tight" />
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <MiniStat icon={PiggyBank} label={`Para investir (${data.settings.investPct}%)`} cents={o.invest} tone="info" />
+            <InvestStat pct={currentPlan(data, today).pct} pending={o.investPending} pendingMonth={o.investPendingMonth} />
             <MiniStat icon={Wallet} label="Fica para ti" cents={o.kept} tone="success" />
           </div>
           {o.statePaid > 0 && (
@@ -82,6 +85,7 @@ export function HomeScreen() {
                   ) : (
                     f.jobId && (
                       <ReceiveButton
+                        active={receiving?.jobId === f.jobId}
                         onClick={() => {
                           const job = data.jobs.find((j) => j.id === f.jobId)
                           const inst = job?.installments.find((i) => !i.receivedDate)
@@ -118,6 +122,7 @@ export function HomeScreen() {
                     today={today}
                     payer={payerLabel(item.job, data.payers)}
                     color={payerColor(item.job, data.payers)}
+                    receiving={receiving?.installmentId === item.installment.id}
                     onReceive={() => setReceiving({ jobId: item.job.id, installmentId: item.installment.id })}
                   />
                 ))}
@@ -166,10 +171,10 @@ export function HomeScreen() {
   )
 }
 
-function MiniStat({ icon: Icon, label, cents, tone }: { icon: typeof Wallet; label: string; cents: number; tone: 'info' | 'success' }) {
+function MiniStat({ icon: Icon, label, cents }: { icon: typeof Wallet; label: string; cents: number; tone: 'success' }) {
   return (
-    <div className={tone === 'info' ? 'rounded-xl bg-info-soft px-3 py-2.5' : 'rounded-xl bg-success-soft px-3 py-2.5'}>
-      <p className={tone === 'info' ? 'flex items-center gap-1.5 text-xs font-semibold text-info' : 'flex items-center gap-1.5 text-xs font-semibold text-success'}>
+    <div className="rounded-xl bg-success-soft px-3 py-2.5">
+      <p className="flex items-center gap-1.5 text-xs font-semibold text-success">
         <Icon aria-hidden className="size-4" />
         {label}
       </p>
@@ -178,20 +183,46 @@ function MiniStat({ icon: Icon, label, cents, tone }: { icon: typeof Wallet; lab
   )
 }
 
-export function ReceiveButton({ onClick }: { onClick: () => void }) {
+/** Botão para marcar um pagamento como recebido: cinzento; fica verde ao tocar (e enquanto a folha está aberta). */
+export function ReceiveButton({ onClick, active = false }: { onClick: () => void; active?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-10 shrink-0 items-center gap-1 rounded-xl bg-success-soft px-3 text-sm font-semibold text-success active:brightness-95"
+      aria-pressed={active}
+      className={cn(
+        'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition-colors',
+        active ? 'bg-success-soft text-success' : 'bg-neutral-soft text-ink active:bg-success-soft active:text-success',
+      )}
     >
-      <CircleCheck aria-hidden className="size-4" />
+      {active ? <CircleCheck aria-hidden className="size-4" /> : <Circle aria-hidden className="size-4" />}
       Recebido
     </button>
   )
 }
 
-function PendingRow({ item, today, payer, color, onReceive }: { item: PendingItem; today: string; payer: string; color: string; onReceive: () => void }) {
+/** Cartão «Para investir» do Início: mostra o que falta investir e abre a página do investimento. */
+function InvestStat({ pct, pending, pendingMonth }: { pct: number; pending: number; pendingMonth: number }) {
+  return (
+    <Link
+      to="/investir"
+      aria-label={`Para investir: ${formatMoney(pending)}. Abrir o investimento`}
+      className="flex flex-col rounded-xl bg-info-soft px-3 py-2.5 ring-1 ring-info/30 transition hover:brightness-95 active:scale-[0.98]"
+    >
+      <span className="flex items-center gap-1.5 text-xs font-semibold text-info">
+        <PiggyBank aria-hidden className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1">Para investir ({pctText(pct)}%)</span>
+        <ChevronRight aria-hidden className="-mr-1 size-4 shrink-0" />
+      </span>
+      <Money cents={pending} display className="mt-0.5 block text-lg font-bold" />
+      <span className="text-xs text-info">
+        {pending === 0 ? 'Tudo investido ✓' : pendingMonth > 0 ? `deste mês: ${formatMoney(pendingMonth)}` : 'de meses anteriores'}
+      </span>
+    </Link>
+  )
+}
+
+function PendingRow({ item, today, payer, color, receiving, onReceive }: { item: PendingItem; today: string; payer: string; color: string; receiving: boolean; onReceive: () => void }) {
   const { job, installment } = item
   const n = job.installments.length
   return (
@@ -211,7 +242,7 @@ function PendingRow({ item, today, payer, color, onReceive }: { item: PendingIte
           </span>
         </span>
       </Link>
-      <ReceiveButton onClick={onReceive} />
+      <ReceiveButton onClick={onReceive} active={receiving} />
     </div>
   )
 }

@@ -1,11 +1,22 @@
-import { CircleAlert, CircleCheck, Copy, EllipsisVertical, Pencil, Repeat, RotateCcw, Trash2 } from 'lucide-react'
+import { CircleAlert, CircleCheck, Copy, EllipsisVertical, Pencil, PiggyBank, Repeat, RotateCcw, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router'
 import { formatDateLong, formatDateShort, formatPeriodPT } from '../../domain/dates'
 import { isReceived, jobTotal, paidAmount, paidCount, remainingAmount } from '../../domain/installments'
-import { installmentInvest, isInstallmentOverdue, jobInvested, jobInvestExpected, jobStatus, overdueDateOf } from '../../domain/jobs'
+import {
+  installmentInvest,
+  installmentPlan,
+  jobInvestDone,
+  jobInvestExpected,
+  jobInvestPending,
+  jobInvestReceived,
+  jobParts,
+  pctText,
+} from '../../domain/invest'
+import { isInstallmentOverdue, jobStatus, overdueDateOf } from '../../domain/jobs'
 import { formatMoney } from '../../domain/money'
-import { deleteJob, duplicateJob, undoReceive } from '../../domain/ops'
+import { deleteJob, duplicateJob, markInvested, undoInvested, undoReceive } from '../../domain/ops'
+import type { ISODate, Job } from '../../domain/types'
 import { payerColor, payerLabel } from '../../domain/payers'
 import { commit, useData } from '../../data/app'
 import { Button, IconButton } from '../components/Button'
@@ -140,10 +151,7 @@ export function JobDetailScreen() {
               )}
             </p>
           </div>
-          <div className="rounded-xl bg-info-soft px-3 py-2.5 text-sm text-info">
-            <span className="font-semibold">{job.investPct}% para investir:</span> {formatMoney(jobInvested(job))}
-            {jobInvestExpected(job) > 0 && <> · previsto mais {formatMoney(jobInvestExpected(job))}</>}
-          </div>
+          <JobInvestBox job={job} today={today} />
         </Card>
 
         <Section title={n > 1 ? 'Pagamentos' : 'Pagamento'}>
@@ -163,7 +171,9 @@ export function JobDetailScreen() {
                     <span className="text-sm text-muted">
                       {received ? (
                         <>
-                          Recebida a {formatDateShort(inst.receivedDate!)} por {methodName(inst.methodId)} · investir {formatMoney(installmentInvest(inst, job))}
+                          Recebida a {formatDateShort(inst.receivedDate!)} por {methodName(inst.methodId)} · investir{' '}
+                          {formatMoney(installmentInvest(inst, data.settings.investPlans, today))}
+                          {inst.invested && ' · investido ✓'}
                         </>
                       ) : inst.dueDate ? (
                         <span className={overdue ? 'font-medium text-danger' : undefined}>
@@ -181,7 +191,7 @@ export function JobDetailScreen() {
                   {received ? (
                     <IconButton icon={RotateCcw} label="Anular recebimento" onClick={() => void undo(inst.id)} />
                   ) : (
-                    <ReceiveButton onClick={() => setReceiving({ jobId: job.id, installmentId: inst.id })} />
+                    <ReceiveButton active={receiving?.installmentId === inst.id} onClick={() => setReceiving({ jobId: job.id, installmentId: inst.id })} />
                   )}
                 </div>
               )
@@ -216,5 +226,79 @@ export function JobDetailScreen() {
         </Button>
       </Sheet>
     </>
+  )
+}
+
+/**
+ * Investimento do trabalho: quanto vai para cada destino e se já foi investido.
+ * Marca de uma vez todos os pagamentos recebidos ainda por investir.
+ */
+function JobInvestBox({ job, today }: { job: Job; today: ISODate }) {
+  const data = useData()
+  const plans = data.settings.investPlans
+  const received = jobInvestReceived(job, plans, today)
+  const expected = jobInvestExpected(job, plans, today)
+  const done = jobInvestDone(job, plans, today)
+  const pending = jobInvestPending(job, plans, today)
+  const pcts = [...new Set(job.installments.map((i) => installmentPlan(i, plans, today).pct))]
+  const parts = jobParts(job, plans, today).filter((p) => p.amount > 0)
+  const investedDates = job.installments.flatMap((i) => (i.invested ? [i.invested.date] : [])).sort()
+  const lastInvested = investedDates[investedDates.length - 1]
+
+  const mark = () => {
+    const refs = job.installments.filter((i) => isReceived(i) && !i.invested).map((i) => ({ jobId: job.id, installmentId: i.id }))
+    try {
+      commit((d, ctx) => markInvested(d, refs, ctx))
+      toast(`Investido: ${formatMoney(pending)}`)
+    } catch (e) {
+      toastError(e)
+    }
+  }
+
+  const undo = async () => {
+    const ok = await confirm({ title: 'Anular o investimento?', message: 'Volta a contar como «por investir».', confirmLabel: 'Anular' })
+    if (!ok) return
+    commit((d, ctx) => job.installments.filter((i) => i.invested).reduce((acc, i) => undoInvested(acc, job.id, i.id, ctx), d))
+    toast('Investimento anulado')
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-xl bg-info-soft px-3 py-3 text-sm text-info">
+      <p className="flex items-center gap-1.5">
+        <PiggyBank aria-hidden className="size-4 shrink-0" />
+        <span>
+          <span className="font-semibold">{pcts.length === 1 ? `${pctText(pcts[0]!)}% para investir` : 'Para investir'}:</span> {formatMoney(received + expected)}
+        </span>
+      </p>
+      {parts.length > 0 && (
+        <ul className="flex flex-col gap-0.5 pl-5.5" aria-label="Divisão do investimento">
+          {parts.map((p) => (
+            <li key={p.destinationId} className="flex justify-between gap-3">
+              <span className="min-w-0">{p.name}</span>
+              <Money cents={p.amount} className="font-semibold" />
+            </li>
+          ))}
+        </ul>
+      )}
+      {done > 0 && (
+        <p className="flex flex-wrap items-center gap-x-2 pl-5.5">
+          <span className="font-semibold text-success">
+            ✓ Investido {formatMoney(done)}
+            {lastInvested && ` a ${formatDateShort(lastInvested)}`}
+          </span>
+          <button type="button" className="font-semibold underline" onClick={() => void undo()}>
+            Anular
+          </button>
+        </p>
+      )}
+      {pending > 0 && (
+        <Button size="sm" icon={PiggyBank} onClick={mark} className="self-start">
+          Marcar como investido · {formatMoney(pending)}
+        </Button>
+      )}
+      {expected > 0 && (
+        <p className="pl-5.5 text-info/80">{received > 0 ? `Mais ${formatMoney(expected)} quando receberes o resto.` : 'Marcas quando receberes e investires.'}</p>
+      )}
+    </div>
   )
 }

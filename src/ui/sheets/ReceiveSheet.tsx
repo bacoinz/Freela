@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
-import { formatPeriodPT } from '../../domain/dates'
+import { formatPeriodPT, periodOf } from '../../domain/dates'
+import { pctText, planFor } from '../../domain/invest'
 import { formatMoney, percentOf } from '../../domain/money'
 import { receive } from '../../domain/ops'
 import { isReceived } from '../../domain/installments'
@@ -43,6 +44,8 @@ export function ReceiveSheet({ target, onClose }: { target: ReceiveTarget | null
 
   if (!job || !inst) return <Sheet open={false} onClose={onClose} title="" children={null} />
 
+  // A % que conta é a do mês em que recebes.
+  const pct = planFor(data.settings.investPlans, periodOf(date)).pct
   const otherPending = job.installments.some((i) => i.id !== inst.id && !isReceived(i))
   let note: string | null = null
   if (amount !== null && amount > 0 && amount < inst.amount) {
@@ -61,7 +64,7 @@ export function ReceiveSheet({ target, onClose }: { target: ReceiveTarget | null
     }
     try {
       commit((d, ctx) => receive(d, job.id, inst.id, { amount, date, methodId }, ctx))
-      toast(`Recebido ${formatMoney(amount)} · para investir ${formatMoney(percentOf(amount, job.investPct))}`)
+      toast(`Recebido ${formatMoney(amount)} · para investir ${formatMoney(percentOf(amount, pct))}`)
       onClose()
     } catch (e) {
       toastError(e)
@@ -86,7 +89,7 @@ export function ReceiveSheet({ target, onClose }: { target: ReceiveTarget | null
       <Field
         label="Valor recebido"
         htmlFor={ids.amount}
-        hint={note ?? (amount ? `${job.investPct}% para investir: ${formatMoney(percentOf(amount, job.investPct))}` : undefined)}
+        hint={note ?? (amount ? `${pctText(pct)}% para investir: ${formatMoney(percentOf(amount, pct))}` : undefined)}
       >
         <MoneyInput id={ids.amount} value={amount} onChange={setAmount} large />
       </Field>

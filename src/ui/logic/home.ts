@@ -1,6 +1,7 @@
 import { addDays, addMonths, endOfPeriod, periodOf, startOfPeriod } from '../../domain/dates'
 import { isReceived, jobTotal } from '../../domain/installments'
-import { installmentInvest, isInstallmentOverdue, overdueDateOf } from '../../domain/jobs'
+import { installmentInvest } from '../../domain/invest'
+import { isInstallmentOverdue, overdueDateOf } from '../../domain/jobs'
 import { listOccurrences, type Occurrence } from '../../domain/obligations'
 import { recurringAppliesTo, recurringDueDate } from '../../domain/recurring'
 import type { AppData, Cents, ISODate, Installment, Job, Period } from '../../domain/types'
@@ -28,7 +29,12 @@ export interface FixedStatus {
 
 export interface MonthOverview {
   received: Cents
+  /** Para investir sobre o recebido neste mês (com a % de cada mês). */
   invest: Cents
+  /** Recebido e ainda por investir, de qualquer mês. */
+  investPending: Cents
+  /** Recebido neste mês e ainda por investir. */
+  investPendingMonth: Cents
   kept: Cents
   statePaid: Cents
   pending: { total: Cents; count: number; overdueCount: number; overdueTotal: Cents; items: PendingItem[] }
@@ -43,8 +49,11 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
   const to = endOfPeriod(period)
   const od = data.settings.overdueDays
 
+  const plans = data.settings.investPlans
   let received = 0
   let invest = 0
+  let investPending = 0
+  let investPendingMonth = 0
   const recent: { job: Job; installment: Installment }[] = []
   const pendingItems: PendingItem[] = []
   let pendingTotal = 0
@@ -56,9 +65,15 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
     for (const inst of job.installments) {
       if (isReceived(inst)) {
         recent.push({ job, installment: inst })
-        if (inst.receivedDate! >= from && inst.receivedDate! <= to) {
+        const inMonth = inst.receivedDate! >= from && inst.receivedDate! <= to
+        const share = installmentInvest(inst, plans, today)
+        if (inMonth) {
           received += inst.amount
-          invest += installmentInvest(inst, job)
+          invest += share
+        }
+        if (!inst.invested) {
+          investPending += share
+          if (inMonth) investPendingMonth += share
         }
         continue
       }
@@ -113,6 +128,8 @@ export function monthOverview(data: AppData, period: Period, today: ISODate): Mo
   return {
     received,
     invest,
+    investPending,
+    investPendingMonth,
     kept: received - invest,
     statePaid,
     pending: {

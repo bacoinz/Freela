@@ -2,6 +2,7 @@ import { Check, Plus, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Navigate, useBlocker, useNavigate, useParams } from 'react-router'
 import { jobTotal } from '../../domain/installments'
+import { currentPlan } from '../../domain/invest'
 import { formatMoney, percentOf } from '../../domain/money'
 import { addJob, updateJob, type JobInput, type PayerInput } from '../../domain/ops'
 import type { AppData, Cents, ISODate, Job } from '../../domain/types'
@@ -110,8 +111,8 @@ export function JobFormScreen() {
     )
   }, [blocker])
 
-  // % para investir: a das Definições (trabalhos novos) ou a que o trabalho já tinha.
-  const investPct = editing?.investPct ?? data.settings.investPct
+  // % para investir deste mês (cada pagamento usa a do mês em que é recebido).
+  const investPct = currentPlan(data, today).pct
   const rowsSum = f.rows.reduce((s, r) => s + r.amount, 0)
   const categories = data.categories.filter((c) => !c.archived || c.id === f.categoryId)
   const methods = data.methods.filter((m) => !m.archived)
@@ -179,7 +180,6 @@ export function JobFormScreen() {
       categoryId: f.categoryId,
       payer: f.payer!,
       workDate: f.workDate,
-      investPct,
       notes: f.notes,
       installments: rowsToInput(f.rows),
     }

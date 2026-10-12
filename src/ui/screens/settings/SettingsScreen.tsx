@@ -1,6 +1,8 @@
-import { Bell, BriefcaseBusiness, CreditCard, Database, Repeat, ShieldCheck, Tag, Users } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CreditCard, Database, PiggyBank, Repeat, ShieldCheck, Tag, Users } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
-import { updateSettings } from '../../../domain/ops'
+import { formatPeriodPT, periodOf } from '../../../domain/dates'
+import { currentPlan, pctText } from '../../../domain/invest'
+import { setInvestPlan, updateSettings } from '../../../domain/ops'
 import { commit, useData } from '../../../data/app'
 import { canLock, unlock } from '../../../data/lock'
 import { isNative } from '../../../data/platform'
@@ -8,6 +10,7 @@ import { cn } from '../../components/cn'
 import { toast, toastError } from '../../components/Feedback'
 import { Toggle, inputClass } from '../../components/Form'
 import { AppBar, Card, ListCard, ListRow, Page, Section } from '../../components/Layout'
+import { useToday } from '../../hooks'
 
 const pad = (h: number) => `${String(h).padStart(2, '0')}:00`
 
@@ -49,6 +52,16 @@ function NumberSetting({ label, description, value, suffix, onSave }: { label: s
 export function SettingsScreen() {
   const data = useData()
   const s = data.settings
+  const today = useToday()
+  const plan = currentPlan(data, today)
+  const savePct = (n: number) => {
+    try {
+      commit((d, ctx) => setInvestPlan(d, { pct: n }, ctx))
+      toast(`Para investir: ${pctText(n)}% a partir de ${formatPeriodPT(periodOf(today))}`)
+    } catch (e) {
+      toastError(e)
+    }
+  }
   const save = (patch: Parameters<typeof updateSettings>[1], msg: string) => {
     try {
       commit((d) => updateSettings(d, patch))
@@ -81,10 +94,16 @@ export function SettingsScreen() {
           <Card className="divide-y divide-line">
             <NumberSetting
               label="Percentagem para investir"
-              description="Aplica-se aos trabalhos novos."
-              value={s.investPct}
+              description={`Conta a partir de ${formatPeriodPT(periodOf(today))}; os meses anteriores mantêm a sua %.`}
+              value={plan.pct}
               suffix="%"
-              onSave={(n) => save({ investPct: n }, `Para investir: ${String(n).replace('.', ',')}%`)}
+              onSave={savePct}
+            />
+            <ListRow
+              icon={PiggyBank}
+              title="Destinos do investimento"
+              subtitle={plan.destinations.map((d) => `${d.name} ${pctText(d.pct)}%`).join(' · ')}
+              to="/investir"
             />
             <NumberSetting
               label="Dias até ficar em atraso"

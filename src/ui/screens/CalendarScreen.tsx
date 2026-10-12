@@ -123,7 +123,7 @@ export function CalendarScreen() {
                       <Money cents={e.amount} className={e.kind === 'received' ? 'font-semibold text-success' : 'font-semibold'} />
                     </Link>
                     {e.kind === 'expected' && !e.virtual && e.jobId && e.installmentId && (
-                      <ReceiveButton onClick={() => setReceiving({ jobId: e.jobId!, installmentId: e.installmentId! })} />
+                      <ReceiveButton active={receiving?.installmentId === e.installmentId} onClick={() => setReceiving({ jobId: e.jobId!, installmentId: e.installmentId! })} />
                     )}
                   </div>
                 ),
