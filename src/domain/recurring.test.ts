@@ -28,7 +28,6 @@ describe('generateRecurringJobs', () => {
       categoryId: 'cat-musica',
       payerId: 'p-escola',
       workDate: '2026-10-05',
-      investPct: 15,
       recurringId: 'rec1',
       period: '2026-10',
     })
@@ -64,11 +63,6 @@ describe('generateRecurringJobs', () => {
     })
     const out = generateRecurringJobs(data, mkCtx('2026-10-06'))
     expect(out.map((j) => `${j.recurringId}:${j.period}`)).toEqual(['a:2026-07', 'a:2026-09', 'a:2026-10', 'b:2026-10'])
-  })
-
-  it('usa a % própria do rendimento se existir', () => {
-    const data = mkData({ recurring: [mkRecurring({ investPct: 10 })] })
-    expect(generateRecurringJobs(data, mkCtx('2026-10-06'))[0]!.investPct).toBe(10)
   })
 
   it('pago no mês seguinte: o trabalho fica no mês de trabalho e o pagamento previsto no mês a seguir', () => {

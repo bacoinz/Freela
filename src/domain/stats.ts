@@ -1,6 +1,7 @@
 import { addMonths, diffDays, isoParts, makeDate, periodOf, periodRange, startOfPeriod } from './dates'
 import { isReceived, remainingAmount } from './installments'
-import { installmentInvest, isInstallmentOverdue, jobInvestExpected, overdueDateOf } from './jobs'
+import { installmentInvest, jobInvestDone, jobInvestExpected, jobInvestPending } from './invest'
+import { isInstallmentOverdue, overdueDateOf } from './jobs'
 import { NEUTRAL_COLOR, payerColor, payerKey, payerLabel } from './payers'
 import type { AppData, Cents, ISODate, Period } from './types'
 
@@ -84,6 +85,10 @@ export interface Stats {
   byCategory: Breakdown[]
   byPayer: PayerStat[]
   investAllTime: Cents
+  /** Já marcado como investido (desde o início). */
+  investDone: Cents
+  /** Recebido mas ainda por investir (desde o início). */
+  investPending: Cents
   investExpected: Cents
   statePaid: { total: Cents; byPeriod: Record<Period, Cents> }
   pending: PendingSummary
@@ -98,7 +103,7 @@ export function receivedEntries(data: AppData): ReceivedEntry[] {
       out.push({
         date: inst.receivedDate!,
         amount: inst.amount,
-        invest: installmentInvest(inst, job),
+        invest: installmentInvest(inst, data.settings.investPlans, inst.receivedDate!),
         methodId: inst.methodId ?? '',
         categoryId: job.categoryId,
         payerKey: payerKey(job),
@@ -235,6 +240,7 @@ function pendingSummary(data: AppData, today: ISODate): PendingSummary {
 /** Estatísticas do período (base: pagamentos recebidos, pela data em que foram recebidos). */
 export function computeStats(data: AppData, range: DateRange, today: ISODate): Stats {
   const all = receivedEntries(data)
+  const plans = data.settings.investPlans
   const entries = all.filter((e) => inRange(e.date, range))
   const total = entries.reduce((s, e) => s + e.amount, 0)
 
@@ -301,7 +307,9 @@ export function computeStats(data: AppData, range: DateRange, today: ISODate): S
     ),
     byPayer: payerStats(data, entries, range),
     investAllTime: all.filter((e) => e.date <= today).reduce((s, e) => s + e.invest, 0),
-    investExpected: data.jobs.reduce((s, j) => s + jobInvestExpected(j), 0),
+    investDone: data.jobs.reduce((s, j) => s + jobInvestDone(j, plans, today), 0),
+    investPending: data.jobs.reduce((s, j) => s + jobInvestPending(j, plans, today), 0),
+    investExpected: data.jobs.reduce((s, j) => s + jobInvestExpected(j, plans, today), 0),
     statePaid,
     pending: pendingSummary(data, today),
   }

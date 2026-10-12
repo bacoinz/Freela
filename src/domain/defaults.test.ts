@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createDefaultData } from './defaults'
+import { defaultPlan } from './invest'
 import { mkCtx, resetIds } from './testkit'
 
 beforeEach(() => resetIds())
@@ -15,8 +16,8 @@ describe('createDefaultData', () => {
     expect(d.jobs).toEqual([])
     expect(d.payers).toEqual([])
     expect(d.recurring).toEqual([])
+    expect(d.settings.investPlans).toEqual([defaultPlan(15)])
     expect(d.settings).toMatchObject({
-      investPct: 15,
       overdueDays: 30,
       remindersEnabled: true,
       reminderHour: 10,

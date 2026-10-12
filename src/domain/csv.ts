@@ -1,6 +1,7 @@
 import { formatDateShort } from './dates'
 import { isReceived, jobTotal } from './installments'
-import { installmentInvest, isInstallmentOverdue } from './jobs'
+import { installmentInvest, installmentPlan } from './invest'
+import { isInstallmentOverdue } from './jobs'
 import { payerLabel } from './payers'
 import type { AppData, Cents, ISODate } from './types'
 
@@ -18,6 +19,7 @@ const HEADER = [
   'Estado',
   '% investimento',
   'Para investir',
+  'Investido em',
   'Notas',
 ]
 
@@ -35,6 +37,7 @@ function field(v: string): string {
 /** CSV com uma linha por prestação (separador ";", UTF-8 com BOM, para abrir no Excel em português). */
 export function jobsToCSV(data: AppData, today: ISODate): string {
   const rows = [HEADER.join(';')]
+  const plans = data.settings.investPlans
   const jobs = [...data.jobs].sort((a, b) => a.workDate.localeCompare(b.workDate) || a.createdAt.localeCompare(b.createdAt))
   for (const job of jobs) {
     const category = data.categories.find((c) => c.id === job.categoryId)?.name ?? ''
@@ -61,8 +64,9 @@ export function jobsToCSV(data: AppData, today: ISODate): string {
           inst.receivedDate ? formatDateShort(inst.receivedDate) : '',
           method,
           state,
-          String(job.investPct).replace('.', ','),
-          plain(installmentInvest(inst, job)),
+          String(installmentPlan(inst, plans, today).pct).replace('.', ','),
+          plain(installmentInvest(inst, plans, today)),
+          inst.invested ? formatDateShort(inst.invested.date) : '',
           job.notes ?? '',
         ]
           .map(field)

@@ -1,7 +1,6 @@
 import { addDays } from './dates'
 import { isReceived } from './installments'
-import { percentOf } from './money'
-import type { Cents, ISODate, Installment, Job } from './types'
+import type { ISODate, Installment, Job } from './types'
 
 export type JobStatus = 'received' | 'overdue' | 'partial' | 'pending'
 
@@ -21,21 +20,6 @@ export function jobStatus(job: Job, today: ISODate, overdueDays: number): JobSta
   if (pending.some((i) => isInstallmentOverdue(i, job, today, overdueDays))) return 'overdue'
   if (pending.length < job.installments.length) return 'partial'
   return 'pending'
-}
-
-/** Parte de uma prestação que vai para investimento (a % do trabalho). */
-export function installmentInvest(inst: Installment, job: Job): Cents {
-  return percentOf(inst.amount, job.investPct)
-}
-
-/** Investimento calculado sobre o que já foi recebido. */
-export function jobInvested(job: Job): Cents {
-  return job.installments.reduce((s, i) => (isReceived(i) ? s + installmentInvest(i, job) : s), 0)
-}
-
-/** Investimento previsto sobre o que ainda falta receber. */
-export function jobInvestExpected(job: Job): Cents {
-  return job.installments.reduce((s, i) => (isReceived(i) ? s : s + installmentInvest(i, job)), 0)
 }
 
 export function nextPendingInstallment(job: Job): Installment | undefined {

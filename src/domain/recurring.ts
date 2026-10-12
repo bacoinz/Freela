@@ -51,7 +51,6 @@ export function generateRecurringJobs(data: AppData, ctx: OpsContext): Job[] {
         categoryId: rec.categoryId,
         payerId: rec.payerId,
         workDate: recurringWorkDate(rec, period),
-        investPct: rec.investPct ?? data.settings.investPct,
         installments: [inst],
         recurringId: rec.id,
         period,

@@ -131,7 +131,19 @@ describe('computeStats (este ano)', () => {
     const st = s()
     expect(st.investAllTime).toBe(1500 + 4500 + 750 + 9000 + 3375 + 3000)
     expect(st.investExpected).toBe(3375 + 1500)
+    expect(st.investDone).toBe(0)
+    expect(st.investPending).toBe(st.investAllTime)
     expect(st.statePaid.total).toBe(12000) // só o de setembro está no período
+  })
+
+  it('separa o já investido do que falta investir', () => {
+    const d = sample()
+    const job = d.jobs.find((j) => j.installments.some((i) => i.receivedDate))!
+    const inst = job.installments.find((i) => i.receivedDate)!
+    inst.invested = { date: TODAY, parts: [{ destinationId: 'poupanca', name: 'Conta poupança', amount: 999 }] }
+    const st = computeStats(d, presetRange({ kind: 'all' }, d, TODAY), TODAY)
+    expect(st.investDone).toBe(999)
+    expect(st.investDone + st.investPending).toBe(st.investAllTime)
     expect(st.statePaid.byPeriod['2026-09']).toBe(12000)
   })
 

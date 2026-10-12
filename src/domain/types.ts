@@ -35,6 +35,32 @@ export interface Installment {
   expectedMethodId?: string
   receivedDate?: ISODate
   methodId?: string
+  /** Já foi investido: quando e quanto foi para cada destino (fotografia, não muda depois). */
+  invested?: { date: ISODate; parts: InvestPart[] }
+}
+
+/** Para onde vai uma parte do investimento (ex.: conta poupança, bitcoin). */
+export interface InvestDestination {
+  id: string
+  name: string
+  /** Onde fica (ex.: «CGD», «Binance»). */
+  where?: string
+  /** % do investimento que vai para este destino (somam 100). */
+  pct: number
+}
+
+/** % para investir e a sua divisão, em vigor a partir do mês `from` (conta o mês em que se recebe). */
+export interface InvestPlan {
+  from: Period
+  pct: number
+  destinations: InvestDestination[]
+}
+
+/** Quanto de um investimento vai para um destino. */
+export interface InvestPart {
+  destinationId: string
+  name: string
+  amount: Cents
 }
 
 export interface Job {
@@ -46,8 +72,6 @@ export interface Job {
   /** …ou pagador avulso ("só desta vez"). */
   payerName?: string
   workDate: ISODate
-  /** % para investir, copiada das definições ao criar. */
-  investPct: number
   notes?: string
   /** 1 = pagamento único; 2 = início + fim; N = personalizado. */
   installments: Installment[]
@@ -73,7 +97,6 @@ export interface RecurringIncome {
    */
   payMonth?: 'same' | 'next'
   methodId?: string
-  investPct?: number
   /** Meses de trabalho que contam (1–12). */
   months: number[]
   /** Primeiro mês a gerar. */
@@ -146,7 +169,8 @@ export interface ObligationRecord {
 export type CalendarColorMode = 'status' | 'payer'
 
 export interface Settings {
-  investPct: number
+  /** Planos de investimento por mês (ordenados por `from`; há sempre pelo menos um). */
+  investPlans: InvestPlan[]
   overdueDays: number
   remindersEnabled: boolean
   reminderHour: number

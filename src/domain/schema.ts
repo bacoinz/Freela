@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { defaultPlan } from './invest'
 import type { AppData } from './types'
 
 /** Versão atual do formato dos dados. */
@@ -21,6 +22,12 @@ const installment = z.object({
   expectedMethodId: z.string().optional(),
   receivedDate: isoDate.optional(),
   methodId: z.string().optional(),
+  invested: z
+    .object({
+      date: isoDate,
+      parts: z.array(z.object({ destinationId: z.string(), name: z.string(), amount: cents })),
+    })
+    .optional(),
 })
 
 const job = z.object({
@@ -30,7 +37,6 @@ const job = z.object({
   payerId: z.string().optional(),
   payerName: z.string().optional(),
   workDate: isoDate,
-  investPct: z.number().min(0).max(100),
   notes: z.string().optional(),
   installments: z.array(installment),
   recurringId: z.string().optional(),
@@ -48,7 +54,6 @@ const recurring = z.object({
   dayOfMonth: z.number().int().min(1).max(31),
   payMonth: z.enum(['same', 'next']).optional(),
   methodId: z.string().optional(),
-  investPct: z.number().min(0).max(100).optional(),
   months: z.array(month),
   startPeriod: period,
   skippedPeriods: z.array(period),
@@ -102,9 +107,23 @@ const obligationRecord = z.object({
   notes: z.string().optional(),
 })
 
+const pct = z.number().min(0).max(100)
+
+const investPlan = z.object({
+  from: period,
+  pct,
+  destinations: z
+    .array(z.object({ id: z.string().min(1), name: z.string(), where: z.string().optional(), pct }))
+    .min(1),
+})
+
 const settings = z
   .object({
-    investPct: z.number().min(0).max(100).default(15),
+    investPlans: z
+      .array(investPlan)
+      .min(1)
+      .default(() => [defaultPlan(15)])
+      .transform((list) => [...list].sort((a, b) => a.from.localeCompare(b.from))),
     overdueDays: z.number().int().min(0).default(30),
     remindersEnabled: z.boolean().default(true),
     reminderHour: z.number().int().min(0).max(23).default(10),
@@ -133,6 +152,13 @@ const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'obj
 
 /** Migra dados de versões antigas para a atual (por agora só existe a v1). */
 function migrate(obj: Record<string, unknown>): Record<string, unknown> {
+  // A % para investir passou de um número nas definições a planos por mês (com destinos).
+  const s = obj.settings
+  if (isObject(s) && !('investPlans' in s)) {
+    const { investPct, ...rest } = s
+    const pctOk = typeof investPct === 'number' && investPct >= 0 && investPct <= 100
+    return { ...obj, settings: { ...rest, investPlans: [defaultPlan(pctOk ? investPct : 15)] } }
+  }
   return obj
 }
 

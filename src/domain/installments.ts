@@ -84,7 +84,7 @@ export function undoInstallment(job: Job, installmentId: string): Job {
     ...job,
     installments: job.installments.map((i) => {
       if (i.id !== installmentId) return i
-      const { receivedDate: _r, methodId: _m, ...rest } = i
+      const { receivedDate: _r, methodId: _m, invested: _inv, ...rest } = i
       return rest
     }),
   }

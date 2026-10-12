@@ -1,8 +1,9 @@
+import { defaultPlan } from './invest'
 import { defaultObligationRules } from './obligations'
 import type { AppData, OpsContext, Settings } from './types'
 
 export const DEFAULT_SETTINGS: Settings = {
-  investPct: 15,
+  investPlans: [defaultPlan(15)],
   overdueDays: 30,
   remindersEnabled: true,
   reminderHour: 10,
@@ -26,6 +27,6 @@ export function createDefaultData(ctx: OpsContext): AppData {
     ],
     payers: [],
     methods: ['Transferência bancária', 'MB WAY', 'Revolut', 'Dinheiro'].map((name) => ({ id: ctx.newId(), name })),
-    settings: { ...DEFAULT_SETTINGS },
+    settings: { ...DEFAULT_SETTINGS, investPlans: [defaultPlan(15)] },
   }
 }

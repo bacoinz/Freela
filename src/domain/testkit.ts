@@ -1,4 +1,5 @@
 // Utilitários só para testes: criar objetos do domínio com valores por defeito.
+import { defaultPlan } from './invest'
 import type { AppData, Installment, Job, OpsContext, RecurringIncome } from './types'
 
 let seq = 0
@@ -22,7 +23,6 @@ export function mkJob(p: Partial<Job> = {}): Job {
     categoryId: 'cat-musica',
     payerName: 'Bar X',
     workDate: '2026-10-01',
-    investPct: 15,
     installments: [mkInst()],
     createdAt: '2026-10-01T10:00:00.000Z',
     updatedAt: '2026-10-01T10:00:00.000Z',
@@ -49,7 +49,7 @@ export function mkData(p: Partial<AppData> = {}): AppData {
       { id: 'dinheiro', name: 'Dinheiro' },
     ],
     settings: {
-      investPct: 15,
+      investPlans: [defaultPlan(15)],
       overdueDays: 30,
       remindersEnabled: true,
       reminderHour: 10,

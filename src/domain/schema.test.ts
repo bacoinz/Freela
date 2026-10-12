@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createDefaultData } from './defaults'
+import { defaultPlan } from './invest'
 import { makeBackup, parseAppData } from './schema'
 import { mkCtx, mkInst, mkJob, mkRecurring, resetIds } from './testkit'
 
@@ -44,6 +45,24 @@ describe('parseAppData', () => {
     const d = sample()
     const old = JSON.parse(JSON.stringify({ app: 'ganhos', schemaVersion: 1, exportedAt: '2026-10-06T12:00:00.000Z', data: d }))
     expect(parseAppData(old)).toEqual(d)
+  })
+
+  it('dados antigos (só com a % nas definições) passam a ter um plano com essa % e 20/80', () => {
+    const d = JSON.parse(JSON.stringify(sample()))
+    delete d.settings.investPlans
+    d.settings.investPct = 12
+    d.jobs[0].investPct = 12
+    const out = parseAppData(d)
+    expect(out.settings.investPlans).toEqual([defaultPlan(12)])
+    expect(out.settings).not.toHaveProperty('investPct')
+    expect(out.jobs[0]).not.toHaveProperty('investPct')
+  })
+
+  it('guarda os planos de investimento e as marcas de investido', () => {
+    const d = sample()
+    d.settings.investPlans.push({ from: '2026-11', pct: 20, destinations: [{ id: 'a', name: 'Ações', where: 'Corretora', pct: 100 }] })
+    d.jobs[0]!.installments[0]!.invested = { date: '2026-10-03', parts: [{ destinationId: 'poupanca', name: 'Conta poupança', amount: 3375 }] }
+    expect(parseAppData(JSON.parse(JSON.stringify(d)))).toEqual(d)
   })
 
   it('completa definições em falta com os valores por defeito', () => {

@@ -1,6 +1,7 @@
 // Operações puras sobre os dados da app: recebem AppData e devolvem um AppData novo.
-import { addDays, diffDays } from './dates'
-import { receiveInstallment, undoInstallment, type Receipt } from './installments'
+import { addDays, diffDays, periodOf } from './dates'
+import { isReceived, receiveInstallment, undoInstallment, type Receipt } from './installments'
+import { installmentParts, planFor, samePlan, validatePlan } from './invest'
 import { nextPayerColor, normalizeName } from './payers'
 import { generateRecurringJobs, recurringDueDate, recurringWorkDate } from './recurring'
 import type {
@@ -9,6 +10,8 @@ import type {
   Cents,
   ISODate,
   Installment,
+  InvestDestination,
+  InvestPlan,
   Job,
   ObligationRecord,
   ObligationRule,
@@ -40,7 +43,6 @@ export interface JobInput {
   categoryId: string
   payer: PayerInput
   workDate: ISODate
-  investPct: number
   notes?: string
   installments: InstallmentInput[]
 }
@@ -64,26 +66,23 @@ function requireCategory(data: AppData, categoryId: string) {
   if (!data.categories.some((c) => c.id === categoryId)) throw new Error('Escolhe uma categoria.')
 }
 
-function requirePct(pct: number) {
-  if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
-    throw new Error('A percentagem para investir tem de estar entre 0 e 100.')
-  }
-}
-
 function buildInstallments(input: InstallmentInput[], existing: Installment[], ctx: OpsContext): Installment[] {
   if (input.length === 0) throw new Error('Indica pelo menos uma prestação.')
-  const existingIds = new Set(existing.map((i) => i.id))
+  const existingById = new Map(existing.map((i) => [i.id, i]))
   return input.map((i) => {
     if (!Number.isSafeInteger(i.amount) || i.amount <= 0) {
       throw new Error('Cada prestação tem de ter um valor maior do que zero.')
     }
-    const inst: Installment = { id: i.id && existingIds.has(i.id) ? i.id : ctx.newId(), amount: i.amount }
+    const old = i.id ? existingById.get(i.id) : undefined
+    const inst: Installment = { id: old ? old.id : ctx.newId(), amount: i.amount }
     if (i.dueDate) inst.dueDate = i.dueDate
     if (i.expectedMethodId) inst.expectedMethodId = i.expectedMethodId
     if (i.received) {
       if (!i.received.methodId) throw new Error('Indica o método de cada prestação recebida.')
       inst.receivedDate = i.received.date
       inst.methodId = i.received.methodId
+      // Já investido e com o mesmo valor: a marca fica (se o valor mudou, volta a ficar por investir).
+      if (old?.invested && old.amount === i.amount) inst.invested = old.invested
     }
     return inst
   })
@@ -173,7 +172,6 @@ export function promoteOneOff(data: AppData, name: string, ctx: OpsContext): Cre
 export function addJob(data: AppData, input: JobInput, ctx: OpsContext): Created {
   const title = requireTitle(input.title)
   requireCategory(data, input.categoryId)
-  requirePct(input.investPct)
   const installments = buildInstallments(input.installments, [], ctx)
   const resolved = resolvePayer(data, input.payer, ctx)
   const now = ctx.nowISO()
@@ -182,7 +180,6 @@ export function addJob(data: AppData, input: JobInput, ctx: OpsContext): Created
     title,
     categoryId: input.categoryId,
     workDate: input.workDate,
-    investPct: input.investPct,
     installments,
     createdAt: now,
     updatedAt: now,
@@ -198,7 +195,6 @@ export function updateJob(data: AppData, jobId: string, input: JobInput, ctx: Op
   if (!old) throw new Error('Trabalho não encontrado.')
   const title = requireTitle(input.title)
   requireCategory(data, input.categoryId)
-  requirePct(input.investPct)
   const installments = buildInstallments(input.installments, old.installments, ctx)
   const resolved = resolvePayer(data, input.payer, ctx)
   const job: Job = {
@@ -206,7 +202,6 @@ export function updateJob(data: AppData, jobId: string, input: JobInput, ctx: Op
     title,
     categoryId: input.categoryId,
     workDate: input.workDate,
-    investPct: input.investPct,
     installments,
     createdAt: old.createdAt,
     updatedAt: ctx.nowISO(),
@@ -246,7 +241,6 @@ export function duplicateJob(data: AppData, jobId: string, ctx: OpsContext): Cre
     title: orig.title,
     categoryId: orig.categoryId,
     workDate: ctx.today,
-    investPct: orig.investPct,
     installments: orig.installments.map((i) => {
       const inst: Installment = { id: ctx.newId(), amount: i.amount }
       if (i.dueDate) inst.dueDate = addDays(i.dueDate, shift)
@@ -274,6 +268,74 @@ export function receive(data: AppData, jobId: string, installmentId: string, r: 
 
 export function undoReceive(data: AppData, jobId: string, installmentId: string, ctx: OpsContext): AppData {
   return mapJob(data, jobId, (j) => ({ ...undoInstallment(j, installmentId), updatedAt: ctx.nowISO() }))
+}
+
+// ---------- investimento ----------
+
+export interface InstallmentRef {
+  jobId: string
+  installmentId: string
+}
+
+/**
+ * Marca pagamentos recebidos como investidos (hoje), guardando quanto foi para cada destino
+ * pelo plano do mês em que foram recebidos. Ignora os por receber e os já investidos.
+ */
+export function markInvested(data: AppData, refs: InstallmentRef[], ctx: OpsContext): AppData {
+  const wanted = new Set(refs.map((r) => `${r.jobId}|${r.installmentId}`))
+  const plans = data.settings.investPlans
+  const now = ctx.nowISO()
+  return {
+    ...data,
+    jobs: data.jobs.map((job) => {
+      let changed = false
+      const installments = job.installments.map((inst) => {
+        if (!wanted.has(`${job.id}|${inst.id}`) || !isReceived(inst) || inst.invested) return inst
+        changed = true
+        return { ...inst, invested: { date: ctx.today, parts: installmentParts(inst, plans, ctx.today) } }
+      })
+      return changed ? { ...job, installments, updatedAt: now } : job
+    }),
+  }
+}
+
+export function undoInvested(data: AppData, jobId: string, installmentId: string, ctx: OpsContext): AppData {
+  return mapJob(data, jobId, (j) => ({
+    ...j,
+    installments: j.installments.map((i) => {
+      if (i.id !== installmentId) return i
+      const { invested: _inv, ...rest } = i
+      return rest
+    }),
+    updatedAt: ctx.nowISO(),
+  }))
+}
+
+/**
+ * Muda a % para investir e/ou os destinos a partir do mês atual (os meses anteriores ficam como estavam).
+ * Destinos sem id recebem um; nomes e "onde" são limpos.
+ */
+export function setInvestPlan(
+  data: AppData,
+  patch: { pct?: number; destinations?: InvestDestination[] },
+  ctx: OpsContext,
+): AppData {
+  const period = periodOf(ctx.today)
+  const plans = data.settings.investPlans
+  const base = planFor(plans, period)
+  const destinations = (patch.destinations ?? base.destinations).map((d) => {
+    const out: InvestDestination = { id: d.id || ctx.newId(), name: cleanName(d.name), pct: d.pct }
+    const where = d.where?.trim()
+    if (where) out.where = where
+    return out
+  })
+  const next: InvestPlan = { from: period, pct: patch.pct ?? base.pct, destinations }
+  validatePlan(next.pct, next.destinations)
+  const before = plans.filter((p) => p.from < period)
+  const after = plans.filter((p) => p.from > period)
+  const prev = before[before.length - 1]
+  const list = [...before, ...(prev && samePlan(prev, next) ? [] : [next]), ...after]
+  return { ...data, settings: { ...data.settings, investPlans: list } }
 }
 
 // ---------- rendimentos fixos ----------
@@ -478,7 +540,6 @@ export function removeObligationRule(data: AppData, id: string): AppData {
 
 export function updateSettings(data: AppData, patch: Partial<Settings>): AppData {
   const next = { ...data.settings, ...patch }
-  requirePct(next.investPct)
   if (!Number.isInteger(next.reminderHour) || next.reminderHour < 0 || next.reminderHour > 23) {
     throw new Error('A hora dos lembretes tem de estar entre 0 e 23.')
   }

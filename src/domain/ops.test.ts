@@ -29,7 +29,6 @@ const base = (p: Partial<JobInput> = {}): JobInput => ({
   categoryId: 'cat-musica',
   payer: { kind: 'oneoff', name: '  Família Silva ' },
   workDate: '2026-10-10',
-  investPct: 15,
   installments: [{ amount: 22500, dueDate: '2026-10-10' }, { amount: 22500, dueDate: '2026-10-30' }],
   ...p,
 })
@@ -38,7 +37,7 @@ describe('addJob', () => {
   it('cria um trabalho com pagador avulso', () => {
     const { data, id } = addJob(mkData(), base(), ctx())
     const job = data.jobs.find((j) => j.id === id)!
-    expect(job).toMatchObject({ title: 'Casamento Silva', payerName: 'Família Silva', workDate: '2026-10-10', investPct: 15 })
+    expect(job).toMatchObject({ title: 'Casamento Silva', payerName: 'Família Silva', workDate: '2026-10-10' })
     expect(job.payerId).toBeUndefined()
     expect(job.installments.map((i) => i.amount)).toEqual([22500, 22500])
     expect(job.createdAt).toBe('2026-10-06T12:00:00.000Z')

@@ -95,9 +95,8 @@ describe('upsertObligationRule', () => {
 
 describe('updateSettings', () => {
   it('altera definições validando os valores', () => {
-    const out = updateSettings(mkData(), { investPct: 20, reminderHour: 9 })
-    expect(out.settings).toMatchObject({ investPct: 20, reminderHour: 9, overdueDays: 30 })
-    expect(() => updateSettings(mkData(), { investPct: 120 })).toThrow(/0 e 100/)
+    const out = updateSettings(mkData(), { reminderHour: 9 })
+    expect(out.settings).toMatchObject({ reminderHour: 9, overdueDays: 30 })
     expect(() => updateSettings(mkData(), { reminderHour: 24 })).toThrow(/hora/)
     expect(() => updateSettings(mkData(), { overdueDays: -1 })).toThrow(/dias/)
   })

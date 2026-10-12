@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
-  installmentInvest,
   isInstallmentOverdue,
-  jobInvested,
-  jobInvestExpected,
   jobStatus,
   nextPendingInstallment,
   overdueDateOf,
@@ -59,24 +56,6 @@ describe('jobStatus', () => {
   it('atrasado tem prioridade sobre parcial', () => {
     const job = mkJob({ installments: [rec(100), mkInst({ dueDate: '2026-10-01' })] })
     expect(jobStatus(job, TODAY, 30)).toBe('overdue')
-  })
-})
-
-describe('investimento', () => {
-  it('calcula 15% só do que foi recebido e prevê o resto', () => {
-    const job = mkJob({ investPct: 15, installments: [rec(22500), mkInst({ amount: 22500 })] })
-    expect(jobInvested(job)).toBe(3375)
-    expect(jobInvestExpected(job)).toBe(3375)
-  })
-
-  it('arredonda por prestação', () => {
-    const inst = rec(22550)
-    expect(installmentInvest(inst, mkJob({ investPct: 15, installments: [inst] }))).toBe(3383)
-  })
-
-  it('respeita a % do próprio trabalho', () => {
-    const job = mkJob({ investPct: 0, installments: [rec(50000)] })
-    expect(jobInvested(job)).toBe(0)
   })
 })
 

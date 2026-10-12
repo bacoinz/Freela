@@ -76,7 +76,6 @@ describe('createAppStore', () => {
           categoryId: 'cat-musica',
           payer: { kind: 'oneoff', name: 'Bar X' },
           workDate: '2026-10-06',
-          investPct: 15,
           installments: [{ amount: 15000 }],
         },
         ctx,
