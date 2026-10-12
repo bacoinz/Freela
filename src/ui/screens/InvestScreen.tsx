@@ -1,11 +1,11 @@
 import { CheckCheck, Circle, CircleCheck, Pencil, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { formatDateShort, formatPeriodPT } from '../../domain/dates'
+import { addMonths, formatDateShort, formatPeriodPT } from '../../domain/dates'
 import { currentPlan, investOverview, pctText, type PendingInvestItem } from '../../domain/invest'
 import { formatMoney } from '../../domain/money'
 import { markInvested, undoInvested } from '../../domain/ops'
-import type { InvestPart } from '../../domain/types'
+import type { InvestPart, InvestPlan } from '../../domain/types'
 import { commit, useData } from '../../data/app'
 import { Button, IconButton } from '../components/Button'
 import { cn } from '../components/cn'
@@ -152,6 +152,7 @@ export function InvestScreen() {
               Mostrar todos ({o.invested.length})
             </Button>
           )}
+          <PlanHistory plans={data.settings.investPlans} />
         </Section>
       </Page>
     </>
@@ -179,3 +180,27 @@ function MarkButton({ onClick }: { onClick: () => void }) {
   )
 }
 
+
+/** Mudanças da % e da divisão ao longo do tempo: «Até setembro: 15% (…) · Desde outubro: 20% (…)». */
+function PlanHistory({ plans }: { plans: InvestPlan[] }) {
+  return (
+    <Card className="p-4">
+      <p className="text-sm font-semibold">Mudanças na divisão</p>
+      <ul className="mt-2 flex flex-col gap-2 text-sm">
+        {plans.map((p, i) => {
+          const next = plans[i + 1]
+          const until = next && formatPeriodPT(addMonths(next.from, -1))
+          const when = i === 0 ? (until ? `Até ${until}` : 'Desde o início') : until ? `${cap(formatPeriodPT(p.from))} a ${until}` : `Desde ${formatPeriodPT(p.from)}`
+          return (
+            <li key={p.from} className="flex flex-col">
+              <span className="font-medium">
+                {when}: {pctText(p.pct)}%
+              </span>
+              <span className="text-muted">{p.destinations.map((d) => `${d.name} ${pctText(d.pct)}%`).join(' · ')}</span>
+            </li>
+          )
+        })}
+      </ul>
+    </Card>
+  )
+}

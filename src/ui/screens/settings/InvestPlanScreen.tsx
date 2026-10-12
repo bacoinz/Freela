@@ -1,6 +1,6 @@
 import { CircleCheck, PiggyBank, Plus, X } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
-import { addMonths, formatPeriodPT, periodOf } from '../../../domain/dates'
+import { formatPeriodPT, periodOf } from '../../../domain/dates'
 import { currentPlan, pctText } from '../../../domain/invest'
 import { setInvestPlan } from '../../../domain/ops'
 import type { InvestPlan } from '../../../domain/types'
@@ -13,9 +13,7 @@ import { Field, inputClass } from '../../components/Form'
 import { AppBar, Card, Page } from '../../components/Layout'
 import { useToday } from '../../hooks'
 
-const cap = (s: string) => s.replace(/^./, (c) => c.toUpperCase())
-
-/** Definições → Divisão do investimento: a % e os destinos (nome, % e onde), com o histórico. */
+/** Definições → Divisão do investimento: a % e os destinos (nome, % e onde). */
 export function InvestPlanScreen() {
   const data = useData()
   const today = useToday()
@@ -23,7 +21,7 @@ export function InvestPlanScreen() {
     <>
       <AppBar title="Divisão do investimento" back="/investir" />
       <Page>
-        <PlanEditor plan={currentPlan(data, today)} plans={data.settings.investPlans} period={periodOf(today)} />
+        <PlanEditor plan={currentPlan(data, today)} period={periodOf(today)} />
       </Page>
     </>
   )
@@ -42,7 +40,7 @@ const toRows = (plan: InvestPlan): DestRow[] =>
   plan.destinations.map((d) => ({ key: uuid(), id: d.id, name: d.name, where: d.where ?? '', pct: pctText(d.pct) }))
 
 /** Edita a % para investir e os destinos; grava para o mês atual (os anteriores ficam como estavam). */
-function PlanEditor({ plan, plans, period }: { plan: InvestPlan; plans: InvestPlan[]; period: string }) {
+function PlanEditor({ plan, period }: { plan: InvestPlan; period: string }) {
   const ids = { pct: useId() }
   const [pct, setPct] = useState(pctText(plan.pct))
   const [rows, setRows] = useState<DestRow[]>(() => toRows(plan))
@@ -103,7 +101,6 @@ function PlanEditor({ plan, plans, period }: { plan: InvestPlan; plans: InvestPl
       <p className="px-1 text-sm text-muted">
         Conta a partir de {formatPeriodPT(period)}. Os meses anteriores mantêm a % e a divisão que tinham, e o que já marcaste como investido não muda.
       </p>
-      {plans.length > 1 && <PlanHistory plans={plans} />}
     </div>
   )
 }
@@ -142,30 +139,6 @@ function DestinationEditor({
       <Field label="Onde" htmlFor={ids.where} optional>
         <input id={ids.where} value={row.where} onChange={(e) => onChange({ where: e.target.value })} placeholder="Ex.: CGD, Binance…" className={inputClass} />
       </Field>
-    </Card>
-  )
-}
-
-/** Planos ao longo do tempo: «Até setembro: 15% (…) · Desde outubro: 20% (…)». */
-function PlanHistory({ plans }: { plans: InvestPlan[] }) {
-  return (
-    <Card className="p-4">
-      <p className="text-sm font-semibold">Histórico</p>
-      <ul className="mt-2 flex flex-col gap-2 text-sm">
-        {plans.map((p, i) => {
-          const next = plans[i + 1]
-          const when =
-            i === 0 ? `Até ${formatPeriodPT(addMonths(next!.from, -1))}` : next ? `${cap(formatPeriodPT(p.from))} a ${formatPeriodPT(addMonths(next.from, -1))}` : `Desde ${formatPeriodPT(p.from)}`
-          return (
-            <li key={p.from} className="flex flex-col">
-              <span className="font-medium">
-                {when}: {pctText(p.pct)}%
-              </span>
-              <span className="text-muted">{p.destinations.map((d) => `${d.name} ${pctText(d.pct)}%`).join(' · ')}</span>
-            </li>
-          )
-        })}
-      </ul>
     </Card>
   )
 }
