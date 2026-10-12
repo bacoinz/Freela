@@ -144,6 +144,19 @@ describe('computeStats (este ano)', () => {
     const st = computeStats(d, presetRange({ kind: 'all' }, d, TODAY), TODAY)
     expect(st.investDone).toBe(999)
     expect(st.investDone + st.investPending).toBe(st.investAllTime)
+  })
+
+  it('já investido em cada destino, desde o início', () => {
+    const d = sample()
+    const [a, b] = d.jobs.flatMap((j) => j.installments.filter((i) => i.receivedDate))
+    a!.invested = { date: TODAY, parts: [{ destinationId: 'poupanca', name: 'Conta poupança', amount: 300 }, { destinationId: 'bitcoin', name: 'Bitcoin', amount: 1200 }] }
+    b!.invested = { date: TODAY, parts: [{ destinationId: 'poupanca', name: 'Poupança', amount: 100 }, { destinationId: 'acoes', name: 'Ações', amount: 50 }] }
+    const st = computeStats(d, presetRange({ kind: 'all' }, d, TODAY), TODAY)
+    expect(st.investDoneParts.map((p) => [p.name, p.amount])).toEqual([
+      ['Poupança', 400],
+      ['Bitcoin', 1200],
+      ['Ações', 50],
+    ])
     expect(st.statePaid.byPeriod['2026-09']).toBe(12000)
   })
 

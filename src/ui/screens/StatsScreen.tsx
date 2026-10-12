@@ -68,7 +68,7 @@ export function StatsScreen() {
           </div>
         </Card>
 
-        <Card className="flex items-center gap-3 p-4">
+        <Card className="flex items-start gap-3 p-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-info-soft text-info">
             <PiggyBank aria-hidden className="size-6" />
           </span>
@@ -82,6 +82,16 @@ export function StatsScreen() {
             <span className="text-sm text-muted">
               Investido {formatMoney(s.investDone)} · por investir {formatMoney(s.investPending)}
             </span>
+            {s.investDoneParts.length > 0 && (
+              <ul className="mt-2 flex flex-col gap-1 border-t border-line pt-2 text-sm" aria-label="Já investido em cada destino">
+                {s.investDoneParts.map((p) => (
+                  <li key={p.destinationId} className="flex justify-between gap-3">
+                    <span className="text-muted">{p.name}</span>
+                    <Money cents={p.amount} className="font-semibold" />
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </Card>
 

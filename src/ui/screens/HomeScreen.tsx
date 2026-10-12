@@ -1,7 +1,7 @@
-import { ChevronRight, Circle, CircleCheck, Info, PiggyBank, Plus, Repeat, Settings, Wallet } from 'lucide-react'
+import { ChevronRight, Circle, CircleCheck, PiggyBank, Plus, Repeat, Settings, Wallet } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { diffDays, formatDateShort, formatDayMonth, formatPeriodPT, periodOf, todayISO } from '../../domain/dates'
+import { formatDateShort, formatDayMonth, formatPeriodPT, periodOf } from '../../domain/dates'
 import { paidCount } from '../../domain/installments'
 import { currentPlan, pctText } from '../../domain/invest'
 import { formatMoney } from '../../domain/money'
@@ -31,8 +31,6 @@ export function HomeScreen() {
   const month = formatPeriodPT(period).split(' de ')[0]
   const methodName = (id?: string) => data.methods.find((m) => m.id === id)?.name ?? ''
 
-  const lastExport = data.settings.lastExportAt?.slice(0, 10)
-  const needsBackup = data.jobs.length > 0 && (!lastExport || diffDays(lastExport, todayISO()) > 30)
 
   return (
     <>
@@ -53,52 +51,6 @@ export function HomeScreen() {
             </p>
           )}
         </Card>
-
-        {needsBackup && (
-          <Link to="/definicoes/dados" className="flex items-start gap-3 rounded-2xl bg-info-soft px-4 py-3 text-info">
-            <Info aria-hidden className="mt-0.5 size-5 shrink-0" />
-            <span className="text-sm font-medium">
-              Faz uma cópia de segurança para fora do telemóvel (ex.: para o PC). <span className="underline">Exportar agora</span>
-            </span>
-          </Link>
-        )}
-
-        {o.fixed.length > 0 && (
-          <Section title="Rendimento fixo">
-            <ListCard>
-              {o.fixed.map((f) => (
-                <div key={f.recurringId} className="flex min-h-16 items-center gap-3 px-4 py-3">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-soft text-muted">
-                    <Repeat aria-hidden className="size-5" />
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate font-medium">{f.title}</span>
-                    <span className="text-sm text-muted">
-                      <Money cents={f.amount} /> · {f.period !== period && `${formatPeriodPT(f.period).split(' de ')[0]} · `}
-                      {f.received ? 'recebido' : `previsto ${formatDayMonth(f.dueDate)}`}
-                    </span>
-                  </div>
-                  {f.received ? (
-                    <Badge tone="success" icon={CircleCheck}>
-                      Recebido
-                    </Badge>
-                  ) : (
-                    f.jobId && (
-                      <ReceiveButton
-                        active={receiving?.jobId === f.jobId}
-                        onClick={() => {
-                          const job = data.jobs.find((j) => j.id === f.jobId)
-                          const inst = job?.installments.find((i) => !i.receivedDate)
-                          if (job && inst) setReceiving({ jobId: job.id, installmentId: inst.id })
-                        }}
-                      />
-                    )
-                  )}
-                </div>
-              ))}
-            </ListCard>
-          </Section>
-        )}
 
         <Section title="A receber" action={o.pending.count > 0 && <TextLink to="/trabalhos">Ver tudo</TextLink>}>
           {o.pending.count === 0 ? (
@@ -144,6 +96,43 @@ export function HomeScreen() {
             </ListCard>
           )}
         </Section>
+
+        {o.fixed.length > 0 && (
+          <Section title="Rendimento fixo">
+            <ListCard>
+              {o.fixed.map((f) => (
+                <div key={f.recurringId} className="flex min-h-16 items-center gap-3 px-4 py-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-neutral-soft text-muted">
+                    <Repeat aria-hidden className="size-5" />
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate font-medium">{f.title}</span>
+                    <span className="text-sm text-muted">
+                      <Money cents={f.amount} /> · {f.period !== period && `${formatPeriodPT(f.period).split(' de ')[0]} · `}
+                      {f.received ? 'recebido' : `previsto ${formatDayMonth(f.dueDate)}`}
+                    </span>
+                  </div>
+                  {f.received ? (
+                    <Badge tone="success" icon={CircleCheck}>
+                      Recebido
+                    </Badge>
+                  ) : (
+                    f.jobId && (
+                      <ReceiveButton
+                        active={receiving?.jobId === f.jobId}
+                        onClick={() => {
+                          const job = data.jobs.find((j) => j.id === f.jobId)
+                          const inst = job?.installments.find((i) => !i.receivedDate)
+                          if (job && inst) setReceiving({ jobId: job.id, installmentId: inst.id })
+                        }}
+                      />
+                    )
+                  )}
+                </div>
+              ))}
+            </ListCard>
+          </Section>
+        )}
 
         {o.recent.length > 0 && (
           <Section title="Últimos recebimentos">
@@ -216,7 +205,7 @@ function InvestStat({ pct, pending, pendingMonth }: { pct: number; pending: numb
       </span>
       <Money cents={pending} display className="mt-0.5 block text-lg font-bold" />
       <span className="text-xs text-info">
-        {pending === 0 ? 'Tudo investido ✓' : pendingMonth > 0 ? `deste mês: ${formatMoney(pendingMonth)}` : 'de meses anteriores'}
+        {pending > 0 && (pendingMonth > 0 ? `deste mês: ${formatMoney(pendingMonth)}` : 'de meses anteriores')}
       </span>
     </Link>
   )

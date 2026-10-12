@@ -1,9 +1,9 @@
 import { addMonths, diffDays, isoParts, makeDate, periodOf, periodRange, startOfPeriod } from './dates'
 import { isReceived, remainingAmount } from './installments'
-import { installmentInvest, jobInvestDone, jobInvestExpected, jobInvestPending } from './invest'
+import { installmentInvest, jobInvestDone, jobInvestExpected, jobInvestPending, sumParts } from './invest'
 import { isInstallmentOverdue, overdueDateOf } from './jobs'
 import { NEUTRAL_COLOR, payerColor, payerKey, payerLabel } from './payers'
-import type { AppData, Cents, ISODate, Period } from './types'
+import type { AppData, Cents, ISODate, Period, InvestPart } from './types'
 
 /** Período das estatísticas: um ano, os últimos 12 meses ou tudo. */
 export type StatsPreset = { kind: 'year'; year: number } | { kind: 'last12' } | { kind: 'all' }
@@ -87,6 +87,8 @@ export interface Stats {
   investAllTime: Cents
   /** Já marcado como investido (desde o início). */
   investDone: Cents
+  /** Já investido em cada destino (desde o início; fica o nome mais recente). */
+  investDoneParts: InvestPart[]
   /** Recebido mas ainda por investir (desde o início). */
   investPending: Cents
   investExpected: Cents
@@ -308,6 +310,7 @@ export function computeStats(data: AppData, range: DateRange, today: ISODate): S
     byPayer: payerStats(data, entries, range),
     investAllTime: all.filter((e) => e.date <= today).reduce((s, e) => s + e.invest, 0),
     investDone: data.jobs.reduce((s, j) => s + jobInvestDone(j, plans, today), 0),
+    investDoneParts: sumParts(data.jobs.flatMap((j) => j.installments.flatMap((i) => (i.invested ? [i.invested.parts] : [])))),
     investPending: data.jobs.reduce((s, j) => s + jobInvestPending(j, plans, today), 0),
     investExpected: data.jobs.reduce((s, j) => s + jobInvestExpected(j, plans, today), 0),
     statePaid,
