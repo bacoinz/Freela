@@ -146,10 +146,7 @@ function ChartLegend({ series }: { series: ChartSeries[] }) {
       {series.map((s, i) => (
         <li key={s.key} className={i === 1 ? 'flex items-center gap-2 border-t border-line pt-1.5' : 'flex items-center gap-2'}>
           <span aria-hidden className="size-3 shrink-0 rounded-sm" style={{ background: s.color }} />
-          <span className="min-w-0 flex-1 text-muted">
-            {s.name}
-            {i > 0 && <span className="text-faint"> · investimento</span>}
-          </span>
+          <span className="min-w-0 flex-1 text-muted">{s.name}</span>
           <Money cents={s.total} className="font-semibold" />
         </li>
       ))}
