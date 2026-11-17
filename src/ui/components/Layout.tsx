@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, ChevronRight, type LucideIcon, ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { IconButton } from './Button'
@@ -97,13 +97,15 @@ interface ListRowProps {
   subtitle?: ReactNode
   right?: ReactNode
   to?: string
+  /** Link externo: abre fora da app (no browser). */
+  href?: string
   onClick?: () => void
   chevron?: boolean
   className?: string
 }
 
 /** Linha de lista tocável (definições, listas simples). */
-export function ListRow({ icon: Icon, leading, title, subtitle, right, to, onClick, chevron, className }: ListRowProps) {
+export function ListRow({ icon: Icon, leading, title, subtitle, right, to, href, onClick, chevron, className }: ListRowProps) {
   const content = (
     <>
       {leading ??
@@ -117,10 +119,17 @@ export function ListRow({ icon: Icon, leading, title, subtitle, right, to, onCli
         {subtitle && <span className="text-sm text-muted">{subtitle}</span>}
       </span>
       {right}
+      {href && <ExternalLink aria-hidden className="size-4 shrink-0 text-faint" />}
       {(chevron ?? !!to) && <ChevronRight aria-hidden className="size-5 shrink-0 text-faint" />}
     </>
   )
-  const cls = cn('flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left', (to || onClick) && 'active:bg-neutral-soft hover:bg-surface-2', className)
+  const cls = cn('flex min-h-14 w-full items-center gap-3 px-4 py-2.5 text-left', (to || href || onClick) && 'active:bg-neutral-soft hover:bg-surface-2', className)
+  if (href)
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={cls}>
+        {content}
+      </a>
+    )
   if (to)
     return (
       <Link to={to} className={cls}>

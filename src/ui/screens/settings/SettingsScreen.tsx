@@ -1,4 +1,4 @@
-import { Bell, BriefcaseBusiness, CreditCard, Database, PiggyBank, Repeat, ShieldCheck, Tag, Users } from 'lucide-react'
+import { Bell, BriefcaseBusiness, CodeXml, Coffee, CreditCard, Database, Globe, PiggyBank, Repeat, ShieldCheck, Tag, Users } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { formatPeriodPT, periodOf } from '../../../domain/dates'
 import { currentPlan, pctText } from '../../../domain/invest'
@@ -11,6 +11,7 @@ import { toast, toastError } from '../../components/Feedback'
 import { Toggle, inputClass } from '../../components/Form'
 import { AppBar, Card, ListCard, ListRow, Page, Section } from '../../components/Layout'
 import { useToday } from '../../hooks'
+import { LINKS } from '../../links'
 
 const pad = (h: number) => `${String(h).padStart(2, '0')}:00`
 
@@ -146,6 +147,23 @@ export function SettingsScreen() {
           <ListCard>
             <ListRow icon={Database} title="Cópias de segurança e exportar" subtitle="Backup, Excel (CSV) e importar" to="/definicoes/dados" />
           </ListCard>
+        </Section>
+
+        <Section title="Sobre a Freela">
+          <ListCard>
+            <ListRow icon={CodeXml} title="Código no GitHub" subtitle="Versões novas da app e o código aberto" href={LINKS.github} />
+            <ListRow icon={Globe} title="Página da app" subtitle="bacoinz.github.io/freela" href={LINKS.site} />
+          </ListCard>
+          <a
+            href={LINKS.kofi}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-12 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[15px] font-semibold text-white hover:brightness-110 active:brightness-95"
+          >
+            <Coffee aria-hidden className="size-5" />
+            Apoiar no Ko-fi
+          </a>
+          <p className="px-1 text-center text-xs text-muted">A Freela é gratuita. Se te for útil, podes pagar-me um café.</p>
         </Section>
 
         <div className="flex flex-col items-center gap-1 py-2 text-center text-xs text-muted">
