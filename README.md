@@ -1,17 +1,12 @@
 <div align="center">
 
-<img src="public/icon.svg" alt="Freela" width="96">
+<img src="docs/screenshots/cover.png" alt="Freela: os teus ganhos de freelancer, só no teu telemóvel" width="100%">
 
-# Freela
-
-**Os teus ganhos de freelancer, só no teu telemóvel.**<br>
-App Android sem conta e sem internet, para registar o que ganhas, o que ainda tens por receber, quanto vai para investir e os prazos do Estado.
+**App Android sem conta e sem internet, para registar o que ganhas, o que ainda tens por receber, quanto vai para investir e os prazos do Estado.**
 
 <a href="https://bacoinz.github.io/freela/"><img src="https://img.shields.io/badge/site-bacoinz.github.io%2Ffreela-3b82f6?style=flat-square&logo=githubpages&logoColor=white&labelColor=131b2d" alt="Site"></a> <a href="https://github.com/bacoinz/freela/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3b82f6?style=flat-square&logo=android&logoColor=white&labelColor=131b2d" alt="Descarregar a APK"></a> <a href="LICENSE.md"><img src="https://img.shields.io/badge/licen%C3%A7a-PolyForm%20Noncommercial-3b82f6?style=flat-square&labelColor=131b2d" alt="Licença"></a> <img src="https://img.shields.io/badge/custo-0%20%E2%82%AC%2Fm%C3%AAs-3b82f6?style=flat-square&labelColor=131b2d" alt="Custo: 0 €/mês"> <a href="https://ko-fi.com/bacoinz"><img src="https://img.shields.io/badge/Ko--fi-apoiar-3b82f6?style=flat-square&logo=kofi&logoColor=white&labelColor=131b2d" alt="Apoiar no Ko-fi"></a>
 
 [Site](https://bacoinz.github.io/freela/) · [Descarregar](https://github.com/bacoinz/freela/releases/latest) · [Instalar](docs/COMO-INSTALAR.md) · [☕ Ko-fi](https://ko-fi.com/bacoinz)
-
-<img src="docs/screenshots/inicio.jpg" alt="Início" width="24%"> <img src="docs/screenshots/investimento.jpg" alt="Investimento" width="24%"> <img src="docs/screenshots/estatisticas.jpg" alt="Estatísticas" width="24%">
 
 </div>
 
@@ -28,6 +23,16 @@ App Android sem conta e sem internet, para registar o que ganhas, o que ainda te
 - **Calendário** do que recebeste, do que está previsto e dos prazos.
 - **Estatísticas**: melhor e pior mês, recebido e investido por mês (com cada destino numa cor), por método, tipo de trabalho e pagador.
 - **Privada**: sem conta e sem permissão de internet. Os dados ficam só no telemóvel, com bloqueio por impressão digital, cópias diárias em `Documentos/Freela` e exportação para Excel (CSV).
+
+## Capturas
+
+<div align="center">
+
+<img src="docs/screenshots/inicio.jpg" alt="Início: recebido no mês, para investir e a receber" width="30%"> <img src="docs/screenshots/investimento.jpg" alt="Investimento: por destino e por mês" width="30%"> <img src="docs/screenshots/estatisticas.jpg" alt="Estatísticas: recebido e investido por mês" width="30%">
+
+<sub>Início, Investimento e Estatísticas, com dados de exemplo.</sub>
+
+</div>
 
 ## Instalar
 

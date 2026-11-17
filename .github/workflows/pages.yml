@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir -p _site/img
           cp -r site/* _site/
-          cp docs/screenshots/*.jpg _site/img/
+          cp docs/screenshots/*.jpg docs/screenshots/*.png _site/img/
           cp public/icon.svg _site/favicon.svg
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

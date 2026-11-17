@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-PT"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:"Bricolage";src:url(../../site/fonts/bricolage-grotesque-latin-wght-normal.woff2) format("woff2");font-weight:200 800}
+@font-face{font-family:"Figtree";src:url(../../site/fonts/figtree-latin-wght-normal.woff2) format("woff2");font-weight:300 900}
+*{box-sizing:border-box;margin:0}
+body{width:1920px;height:1080px;overflow:hidden;background:#0b1120;color:#eef2fb;font-family:Figtree,sans-serif;position:relative}
+body::before{content:"";position:absolute;inset:0;background:radial-gradient(900px 600px at 78% 40%,rgba(59,130,246,.28),transparent 70%),radial-gradient(700px 500px at 10% 100%,rgba(74,222,155,.08),transparent 70%)}
+.left{position:absolute;left:96px;top:170px;width:700px}
+.brand{display:flex;align-items:center;gap:26px}
+.brand img{width:84px;height:84px;border-radius:24px}
+.brand span{font:800 88px Bricolage;letter-spacing:-.04em}
+h1{font:800 66px/1.04 Bricolage;letter-spacing:-.035em;margin-top:70px}
+h1 em{font-style:normal;background:linear-gradient(135deg,#7db4ff,#2563eb);-webkit-background-clip:text;color:transparent}
+p{font-size:32px;line-height:1.5;color:#a3adc4;margin-top:34px;width:640px}
+.pill{display:inline-block;margin-top:52px;background:#3b82f6;color:#fff;font-weight:700;font-size:30px;padding:20px 40px;border-radius:999px}
+.phones{position:absolute;right:56px;top:120px;display:flex;gap:28px;align-items:flex-start}
+.phones img{width:290px;border-radius:44px;border:11px solid #03060d;box-shadow:0 50px 120px rgba(0,0,0,.75)}
+.phones img:nth-child(1){margin-top:70px}.phones img:nth-child(3){margin-top:120px}
+</style></head><body>
+<div class="left">
+  <div class="brand"><img src="../../public/icon.svg" alt=""><span>Freela</span></div>
+  <h1>Os teus ganhos de freelancer,<br><em>só no teu telemóvel.</em></h1>
+  <p>Ganhos, pagamentos por receber, investimento e prazos do Estado.</p>
+  <span class="pill">Sem conta · sem internet · grátis</span>
+</div>
+<div class="phones">
+  <img src="../screenshots/inicio.jpg" alt=""><img src="../screenshots/investimento.jpg" alt=""><img src="../screenshots/estatisticas.jpg" alt="">
+</div>
+</body></html>
