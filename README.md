@@ -6,7 +6,7 @@
 
 <a href="https://bacoinz.github.io/freela/"><img src="https://img.shields.io/badge/site-bacoinz.github.io%2Ffreela-3b82f6?style=flat-square&logo=githubpages&logoColor=white&labelColor=131b2d" alt="Site"></a> <a href="https://github.com/bacoinz/freela/releases/latest"><img src="https://img.shields.io/badge/Android-APK-3b82f6?style=flat-square&logo=android&logoColor=white&labelColor=131b2d" alt="Descarregar a APK"></a> <a href="LICENSE.md"><img src="https://img.shields.io/badge/licen%C3%A7a-PolyForm%20Noncommercial-3b82f6?style=flat-square&labelColor=131b2d" alt="Licença"></a> <img src="https://img.shields.io/badge/custo-0%20%E2%82%AC%2Fm%C3%AAs-3b82f6?style=flat-square&labelColor=131b2d" alt="Custo: 0 €/mês"> <a href="https://ko-fi.com/bacoinz"><img src="https://img.shields.io/badge/Ko--fi-apoiar-3b82f6?style=flat-square&logo=kofi&logoColor=white&labelColor=131b2d" alt="Apoiar no Ko-fi"></a>
 
-[Site](https://bacoinz.github.io/freela/) · [Descarregar](https://github.com/bacoinz/freela/releases/latest) · [Instalar](docs/COMO-INSTALAR.md) · [☕ Ko-fi](https://ko-fi.com/bacoinz)
+[Site](https://bacoinz.github.io/Freela/) · [Descarregar](https://github.com/bacoinz/freela/releases/latest) · [Instalar](docs/COMO-INSTALAR.md) · [☕ Ko-fi](https://ko-fi.com/bacoinz)
 
 </div>
 
